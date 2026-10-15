@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    * { box-sizing: border-box; }
+    html, body {
+      margin: 0;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      color: #e2e8f0;
+      background: #03030d;
+      font-family: Arial, sans-serif;
+    }
+    #scene {
+      position: relative;
+      width: 100%;
+      height: 650px;
+      overflow: hidden;
+      border: 1px solid rgba(0, 229, 255, 0.5);
+      border-radius: 16px;
+      background:
+        radial-gradient(ellipse at center, rgba(17, 23, 52, 0.65), #03030d 72%);
+      box-shadow: 0 0 32px rgba(0, 229, 255, 0.12);
+    }
+    #scene canvas { display: block; }
+    .hint {
+      position: absolute;
+      z-index: 3;
+      top: 14px;
+      left: 50%;
+      width: max-content;
+      max-width: calc(100% - 30px);
+      transform: translateX(-50%);
+      padding: 9px 16px;
+      border: 1px solid rgba(0, 229, 255, 0.5);
+      border-radius: 22px;
+      background: rgba(3, 7, 20, 0.88);
+      color: #a5f3fc;
+      font-size: 12px;
+      text-align: center;
+      pointer-events: none;
+    }
+    .planet-panel {
+      position: absolute;
+      z-index: 2;
+      width: min(250px, 31%);
+      padding: 12px 14px;
+      border: 1px solid rgba(0, 229, 255, 0.65);
+      border-radius: 10px;
+      background: rgba(5, 8, 24, 0.91);
+      box-shadow: 0 0 18px rgba(0, 229, 255, 0.17);
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 0.25s ease;
+      pointer-events: none;
+      backdrop-filter: blur(8px);
+    }
+    .planet-panel.visible { opacity: 1; visibility: visible; }
+    .planet-panel h3 {
+      margin: 0 0 7px;
+      color: #67e8f9;
+      font-size: 13px;
+      letter-spacing: 0.04em;
+    }
+    .planet-panel p {
+      margin: 0;
+      color: #dbeafe;
+      font-size: 12px;
+      line-height: 1.5;
+    }
+    #panel-atmosphere { top: 62px; left: 14px; }
+    #panel-surface { top: 62px; right: 14px; }
+    #panel-discovery { bottom: 62px; left: 14px; }
+    #panel-orbit { right: 14px; bottom: 62px; }
+    #center-label {
+      position: absolute;
+      z-index: 2;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      color: #a5f3fc;
+      font-size: 13px;
+      text-align: center;
+      text-shadow: 0 0 14px #00e5ff;
+      pointer-events: none;
+    }
+    #reset-camera {
+      position: absolute;
+      z-index: 4;
+      bottom: 15px;
+      left: 50%;
+      transform: translateX(-50%);
+      padding: 9px 17px;
+      border: 0;
+      border-radius: 24px;
+      background: linear-gradient(120deg, #00e5ff, #818cf8);
+      color: #050816;
+      font-weight: 700;
+      cursor: pointer;
+      display: none;
+    }
+    #reset-camera.visible { display: block; }
+    #scale-note {
+      margin: 8px 4px 0;
+      color: #94a3b8;
+      font-size: 11px;
+      line-height: 1.5;
+    }
+    @media (max-width: 700px) {
+      #scene { height: 610px; }
+      .planet-panel { width: calc(50% - 20px); padding: 9px; }
+      .planet-panel h3 { font-size: 11px; }
+      .planet-panel p { font-size: 10px; }
+      #panel-atmosphere, #panel-surface { top: 56px; }
+      #panel-atmosphere, #panel-discovery { left: 8px; }
+      #panel-surface, #panel-orbit { right: 8px; }
+      #panel-discovery, #panel-orbit { bottom: 60px; }
+      .hint { font-size: 10px; padding: 8px 11px; }
+    }
+  </style>
+</head>
+<body>
+  <div id="scene">
+    <div class="hint">Bir gezegene dokun / tıkla: yakınlaş ve yılın keşiflerini gör · Sürükle: sistemi döndür · Tekerlek: yakınlaştır</div>
+    <div id="panel-atmosphere" class="planet-panel">
+      <h3>⚡ ATMOSFER & İKLİM</h3><p></p>
+    </div>
+    <div id="panel-surface" class="planet-panel">
+      <h3>🔬 YÜZEY / YAPI</h3><p></p>
+    </div>
+    <div id="panel-discovery" class="planet-panel">
+      <h3>🚀 SEÇİLEN YILIN KEŞİFLERİ</h3><p></p>
+    </div>
+    <div id="panel-orbit" class="planet-panel">
+      <h3>📡 YÖRÜNGE & UYDULAR</h3><p></p>
+    </div>
+    <div id="center-label"></div>
+    <button id="reset-camera" type="button">✕ Sistemin tamamına dön</button>
+  </div>
+  <p id="scale-note">
+    Görsel bir 3D modeldir: gezegen dokuları fotoğraf tabanlıdır; okunabilirlik
+    için gezegen boyutları ve yörünge uzaklıkları aynı gerçek ölçeği kullanmaz.
+    Güneş Sistemi'nin gerçek oranları tek ekranda gösterilemeyecek kadar büyüktür.
+    Dokuların yüklenmesi internet bağlantısı gerektirir.
+  </p>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+  <script>
+    const selectedYear = __SELECTED_YEAR__;
+    const container = document.getElementById("scene");
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(48, 1, 0.1, 500);
+    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+    renderer.outputEncoding = THREE.sRGBEncoding;
+    renderer.setSize(container.clientWidth, container.clientHeight);
+    container.insertBefore(renderer.domElement, container.firstChild);
+
+    scene.add(new THREE.AmbientLight(0x9aaacc, 1.2));
+    const sunLight = new THREE.PointLight(0xffe2ad, 3.2, 180, 1.3);
+    scene.add(sunLight);
+
+    const starGeometry = new THREE.BufferGeometry();
+    const starPositions = [];
+    for (let i = 0; i < 1800; i += 1) {
+      starPositions.push(
+        (Math.random() - 0.5) * 260,
+        (Math.random() - 0.5) * 150,
+        (Math.random() - 0.5) * 260
+      );
+    }
+    starGeometry.setAttribute(
+      "position",
+      new THREE.Float32BufferAttribute(starPositions, 3)
+    );
+    scene.add(new THREE.Points(
+      starGeometry,
+      new THREE.PointsMaterial({ color: 0xb9d7ff, size: 0.16, transparent: true, opacity: 0.8 })
+    ));
+
+    const textureLoader = new THREE.TextureLoader();
+    const sun = new THREE.Mesh(
+      new THREE.SphereGeometry(2.7, 48, 48),
+      new THREE.MeshBasicMaterial({ color: 0xffbd55 })
+    );
+    const sunTexture = textureLoader.load(
+      "https://www.solarsystemscope.com/textures/download/2k_sun.jpg",
+      texture => { texture.encoding = THREE.sRGBEncoding; sun.material.map = texture; sun.material.color.set(0xffffff); sun.material.needsUpdate = true; }
+    );
+    sun.userData.isSun = true;
+    scene.add(sun);
+
+    const planetData = [
+      {
+        name: "Merkür", radius: 0.38, distance: 5.2, period: 88,
+        texture: "2k_mercury.jpg", color: 0x9a9287,
+        atmosphere: "Neredeyse yok denecek kadar ince bir ekzosferi vardır. Gündüz ve gece sıcaklıkları arasında çok büyük farklar görülür.",
+        surface: "Kayalık ve kraterlerle kaplıdır; Güneş Sistemi'nin en küçük gezegenidir.",
+        orbitInfo: "Güneş'e en yakın gezegendir; doğal uydusu yoktur.",
+        events: [
+          { year: 1974, text: "Mariner 10, Merkür'ün ilk yakın geçiş görüntülerini gönderdi." },
+          { year: 2011, text: "MESSENGER, Merkür yörüngesine giren ilk uzay aracı oldu." },
+          { year: 2025, text: "BepiColombo'nun Merkür yörüngesine girişi için planlanan dönem." }
+        ]
+      },
+      {
+        name: "Venüs", radius: 0.62, distance: 7.5, period: 225,
+        texture: "2k_venus_surface.jpg", color: 0xd8b477,
+        atmosphere: "Yoğun atmosferinin çoğu karbondioksittir; sülfürik asit bulutları ve güçlü sera etkisi bulunur.",
+        surface: "Kayalık yüzeyi çok sıcaktır ve yüzey basıncı Dünya'nınkinden çok daha yüksektir.",
+        orbitInfo: "Güneş çevresindeki turunu yaklaşık 225 Dünya gününde tamamlar; doğal uydusu yoktur.",
+        events: [
+          { year: 1970, text: "Venera 7, başka bir gezegene başarılı iniş yapan ilk araç oldu." },
+          { year: 1990, text: "Magellan, radar kullanarak Venüs yüzeyinin ayrıntılı haritalamasını başlattı." },
+          { year: 2021, text: "DAVINCI ve VERITAS görevleri NASA tarafından seçildi." }
+        ]
+      },
+      {
+        name: "Dünya", radius: 0.68, distance: 10, period: 365,
+        texture: "2k_earth_daymap.jpg", color: 0x3c84d8,
+        atmosphere: "Azot ve oksijenden oluşan atmosferi yaşamı destekler ve yüzeyi zararlı ışınımdan korur.",
+        surface: "Sıvı su okyanusları, kıtalar ve aktif tektonik plakalar içerir.",
+        orbitInfo: "Bir doğal uydusu vardır: Ay. ISS, alçak Dünya yörüngesinde görev yapar.",
+        events: [
+          { year: 1972, text: "Apollo 17'nin Dünya fotoğrafı, gezegenin bütün görünüşünü kayda geçirdi." },
+          { year: 1990, text: "Voyager 1, Dünya'yı milyarlarca kilometre uzaktan görüntüledi." },
+          { year: 2020, text: "Crew Dragon Demo-2, NASA astronotlarını ISS'e taşıdı." }
+        ]
+      },
+      {
+        name: "Mars", radius: 0.49, distance: 13, period: 687,
+        texture: "2k_mars.jpg", color: 0xc75e43,
+        atmosphere: "İnce ve çoğunlukla karbondioksitten oluşan atmosferinde toz fırtınaları yaşanır.",
+        surface: "Demir oksitli kızıl yüzeyi; Olympus Mons ve Valles Marineris gibi büyük oluşumlar barındırır.",
+        orbitInfo: "İki küçük uydusu Phobos ve Deimos'tur.",
+        events: [
+          { year: 1976, text: "Viking 1, Mars'a başarılı iniş yapıp yüzeyde deneyler gerçekleştirdi." },
+          { year: 2012, text: "Curiosity, Gale Krateri'ne indi ve Mars'ın geçmişte yaşama elverişli koşullarını araştırdı." },
+          { year: 2021, text: "Perseverance Jezero Krateri'ne indi; Ingenuity başka bir gezegendeki ilk motorlu uçuşu yaptı." }
+        ]
+      },
+      {
+        name: "Jüpiter", radius: 1.48, distance: 17, period: 4333,
+        texture: "2k_jupiter.jpg", color: 0xc99a73,
+        atmosphere: "Hidrojen ve helyum ağırlıklı dev atmosferinde Büyük Kırmızı Leke gibi uzun ömürlü fırtınalar görülür.",
+        surface: "Gaz devidir; Dünya benzeri katı bir yüzeyi yoktur.",
+        orbitInfo: "Ganymede ve Europa dahil çok sayıda doğal uydusu vardır.",
+        events: [
+          { year: 1979, text: "Voyager 1 ve 2, Jüpiter'i ve uydularını yakından görüntüledi." },
+          { year: 1995, text: "Galileo sondası Jüpiter atmosferine girdi; yörünge aracı gezegeni incelemeye başladı." },
+          { year: 2016, text: "Juno, Jüpiter yörüngesine girdi ve kutupları ile iç yapısını incelemeye başladı." }
+        ]
+      },
+      {
+        name: "Satürn", radius: 1.24, distance: 22, period: 10759,
+        texture: "2k_saturn.jpg", color: 0xd8c7a1,
+        atmosphere: "Hidrojen ve helyumdan oluşan derin atmosferinde güçlü rüzgârlar ve kutup fırtınaları bulunur.",
+        surface: "Gaz devidir; buz ve kaya parçacıklarından oluşan belirgin halkaları vardır.",
+        orbitInfo: "Titan ve Enceladus dahil çok sayıda uydusu vardır.",
+        events: [
+          { year: 1980, text: "Voyager 1, Satürn'ün ve uydularının yakın geçiş görüntülerini gönderdi." },
+          { year: 2004, text: "Cassini Satürn yörüngesine girdi; Huygens 2005'te Titan'a indi." },
+          { year: 2017, text: "Cassini görevi, Satürn atmosferine kontrollü dalışla tamamlandı." }
+        ]
+      },
+      {
+        name: "Uranüs", radius: 0.94, distance: 27, period: 30687,
+        texture: "2k_uranus.jpg", color: 0x8ed9dd,
+        atmosphere: "Hidrojen, helyum ve metan içerir; metan gezegene mavi-yeşil görünüm verir.",
+        surface: "Buz devidir. Eksen eğikliği nedeniyle neredeyse yan yatmış şekilde döner.",
+        orbitInfo: "Halkaları ve bilinen doğal uyduları vardır.",
+        events: [
+          { year: 1986, text: "Voyager 2, Uranüs'ün yanından geçen ilk ve şimdiye kadarki tek uzay aracı oldu." }
+        ]
+      },
+      {
+        name: "Neptün", radius: 0.91, distance: 31, period: 60190,
+        texture: "2k_neptune.jpg", color: 0x477de0,
+        atmosphere: "Hidrojen, helyum ve metan içerir; çok hızlı rüzgârlar görülür.",
+        surface: "Uranüs gibi bir buz devidir; katı yüzey yerine derin atmosfer ve iç katmanlardan oluşur.",
+        orbitInfo: "En büyük uydusu Triton'dur; Triton gezegenin dönüş yönünün tersine dolanır.",
+        events: [
+          { year: 1989, text: "Voyager 2, Neptün'ün ilk yakın görüntülerini ve Triton gözlemlerini gönderdi." }
+        ]
+      }
+    ];
+
+    const planets = [];
+    const planetGroup = new THREE.Group();
+    scene.add(planetGroup);
+    const ringMeshes = [];
+    planetData.forEach((data, index) => {
+      const orbit = new THREE.Mesh(
+        new THREE.RingGeometry(data.distance - 0.012, data.distance + 0.012, 160),
+        new THREE.MeshBasicMaterial({
+          color: 0x5b789c, side: THREE.DoubleSide, transparent: true, opacity: 0.34
+        })
+      );
+      orbit.rotation.x = -Math.PI / 2;
+      scene.add(orbit);
+
+      const material = new THREE.MeshStandardMaterial({
+        color: data.color, roughness: 0.92, metalness: 0.02
+      });
+      const texture = textureLoader.load(
+        `https://www.solarsystemscope.com/textures/download/${data.texture}`,
+        loaded => {
+          loaded.encoding = THREE.sRGBEncoding;
+          material.map = loaded;
+          material.color.set(0xffffff);
+          material.needsUpdate = true;
+        },
+        undefined,
+        () => console.warn(`Gezegen dokusu yüklenemedi; renkli model gösteriliyor: ${data.name}`)
+      );
+      material.color.set(data.color);
+      const mesh = new THREE.Mesh(
+        new THREE.SphereGeometry(data.radius, 48, 48),
+        material
+      );
+      mesh.userData.planetIndex = index;
+      const initialAngle = index * 0.79 + 0.4;
+      mesh.position.set(
+        Math.cos(initialAngle) * data.distance,
+        0,
+        Math.sin(initialAngle) * data.distance
+      );
+      mesh.rotation.z = 0.12;
+      planetGroup.add(mesh);
+      planets.push({ data, mesh, angle: initialAngle });
+
+      if (data.name === "Satürn") {
+        const ringTexture = textureLoader.load(
+          "https://www.solarsystemscope.com/textures/download/2k_saturn_ring_alpha.png",
+          loaded => {
+            loaded.encoding = THREE.sRGBEncoding;
+            const ringMaterial = new THREE.MeshBasicMaterial({
+              map: loaded,
+              color: 0xd7c7a1,
+              side: THREE.DoubleSide,
+              transparent: true,
+              opacity: 0.9,
+              alphaTest: 0.08
+            });
+            const saturnRing = new THREE.Mesh(
+              new THREE.RingGeometry(data.radius * 1.35, data.radius * 2.25, 96),
+              ringMaterial
+            );
+            saturnRing.rotation.x = Math.PI / 2.35;
+            mesh.add(saturnRing);
+            ringMeshes.push(saturnRing);
+          },
+          undefined,
+          () => console.warn("Satürn halka dokusu yüklenemedi.")
+        );
+      }
+    });
+
+    const controls = new THREE.OrbitControls(camera, renderer.domElement);
+    controls.enableDamping = true;
+    controls.dampingFactor = 0.06;
+    controls.minDistance = 2.5;
+    controls.maxDistance = 90;
+    controls.target.set(0, 0, 0);
+    camera.position.set(0, 36, 48);
+
+    const raycaster = new THREE.Raycaster();
+    const pointer = new THREE.Vector2();
+    const resetButton = document.getElementById("reset-camera");
+    let selectedPlanet = null;
+    let targetCameraPosition = null;
+    let lastFrame = performance.now();
+    const centerLabel = document.getElementById("center-label");
+
+    function fillInfoPanels(data) {
+      document.querySelector("#panel-atmosphere p").textContent = data.atmosphere;
+      document.querySelector("#panel-surface p").textContent = data.surface;
+      document.querySelector("#panel-orbit p").textContent = data.orbitInfo;
+      const knownEvents = data.events
+        .filter(event => event.year <= selectedYear)
+        .sort((a, b) => b.year - a.year);
+      const exactEvents = knownEvents.filter(event => event.year === selectedYear);
+      const discoveryText = exactEvents.length
+        ? exactEvents.map(event => `${event.year}: ${event.text}`).join(" ")
+        : knownEvents.length
+          ? `Bu yıl için bu gezegene ait özel bir keşif kaydı bulunmuyor. Son önemli görev (${knownEvents[0].year}): ${knownEvents[0].text}`
+          : `${selectedYear} yılına kadar bu gezegen için bu örnek veri setinde görev kaydı bulunmuyor.`;
+      document.querySelector("#panel-discovery p").textContent = discoveryText;
+      document.querySelectorAll(".planet-panel").forEach(panel => {
+        panel.classList.add("visible");
+      });
+      centerLabel.innerHTML = `<b>${data.name}</b><br>${selectedYear} yılı`;
+      resetButton.classList.add("visible");
+    }
+
+    function selectPlanet(planet) {
+      selectedPlanet = planet;
+      fillInfoPanels(planet.data);
+      const direction = new THREE.Vector3(
+        planet.mesh.position.x,
+        planet.mesh.position.y,
+        planet.mesh.position.z
+      ).normalize();
+      const distance = Math.max(planet.data.radius * 5.5, 3.2);
+      targetCameraPosition = planet.mesh.position.clone().add(
+        direction.multiplyScalar(distance)
+      );
+      targetCameraPosition.y += Math.max(planet.data.radius * 1.8, 1.2);
+      controls.target.copy(planet.mesh.position);
+    }
+
+    function resetCamera() {
+      selectedPlanet = null;
+      targetCameraPosition = new THREE.Vector3(0, 36, 48);
+      controls.target.set(0, 0, 0);
+      document.querySelectorAll(".planet-panel").forEach(panel => {
+        panel.classList.remove("visible");
+      });
+      centerLabel.textContent = "";
+      resetButton.classList.remove("visible");
+    }
+    resetButton.addEventListener("click", resetCamera);
+
+    function onPointerUp(event) {
+      const bounds = renderer.domElement.getBoundingClientRect();
+      pointer.x = ((event.clientX - bounds.left) / bounds.width) * 2 - 1;
+      pointer.y = -((event.clientY - bounds.top) / bounds.height) * 2 + 1;
+      raycaster.setFromCamera(pointer, camera);
+      const hits = raycaster.intersectObjects(planets.map(planet => planet.mesh));
+      if (hits.length) {
+        const index = hits[0].object.userData.planetIndex;
+        selectPlanet(planets[index]);
+      }
+    }
+    renderer.domElement.addEventListener("pointerup", onPointerUp);
+
+    function resize() {
+      const width = container.clientWidth;
+      const height = container.clientHeight;
+      camera.aspect = width / height;
+      camera.updateProjectionMatrix();
+      renderer.setSize(width, height);
+    }
+    window.addEventListener("resize", resize);
+    new ResizeObserver(resize).observe(container);
+
+    function animate(now) {
+      requestAnimationFrame(animate);
+      const delta = Math.min((now - lastFrame) / 1000, 0.05);
+      lastFrame = now;
+
+      planets.forEach(planet => {
+        planet.angle += delta * (0.19 / Math.sqrt(planet.data.distance));
+        planet.mesh.position.x = Math.cos(planet.angle) * planet.data.distance;
+        planet.mesh.position.z = Math.sin(planet.angle) * planet.data.distance;
+        planet.mesh.rotation.y += delta * 0.25;
+      });
+      sun.rotation.y += delta * 0.08;
+
+      if (selectedPlanet && targetCameraPosition) {
+        const direction = new THREE.Vector3(
+          selectedPlanet.mesh.position.x,
+          selectedPlanet.mesh.position.y,
+          selectedPlanet.mesh.position.z
+        ).normalize();
+        const distance = Math.max(selectedPlanet.data.radius * 5.5, 3.2);
+        const movingTarget = selectedPlanet.mesh.position.clone().add(
+          direction.multiplyScalar(distance)
+        );
+        movingTarget.y += Math.max(selectedPlanet.data.radius * 1.8, 1.2);
+        camera.position.lerp(movingTarget, 0.055);
+        controls.target.lerp(selectedPlanet.mesh.position, 0.08);
+      } else if (targetCameraPosition) {
+        camera.position.lerp(targetCameraPosition, 0.06);
+        if (camera.position.distanceTo(targetCameraPosition) < 0.08) {
+          targetCameraPosition = null;
+        }
+      }
+
+      controls.update();
+      renderer.render(scene, camera);
+    }
+    resetCamera();
+    requestAnimationFrame(animate);
+  </script>
+</body>
+</html>
