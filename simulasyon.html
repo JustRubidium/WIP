@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="tr">
+<html lang="__LANGUAGE__">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -54,18 +54,56 @@
       box-shadow: 0 0 18px rgba(0, 229, 255, 0.17);
       opacity: 0;
       visibility: hidden;
-      transition: opacity 0.25s ease;
-      pointer-events: none;
+      transition:
+        opacity 0.45s ease,
+        visibility 0.45s ease,
+        transform 0.65s cubic-bezier(0.2, 0.75, 0.25, 1),
+        top 0.65s cubic-bezier(0.2, 0.75, 0.25, 1),
+        right 0.65s cubic-bezier(0.2, 0.75, 0.25, 1),
+        bottom 0.65s cubic-bezier(0.2, 0.75, 0.25, 1),
+        left 0.65s cubic-bezier(0.2, 0.75, 0.25, 1),
+        width 0.65s cubic-bezier(0.2, 0.75, 0.25, 1),
+        max-height 0.65s cubic-bezier(0.2, 0.75, 0.25, 1),
+        padding 0.65s cubic-bezier(0.2, 0.75, 0.25, 1);
+      pointer-events: auto;
       backdrop-filter: blur(8px);
       max-height: 38%;
       overflow-y: auto;
     }
     .planet-panel.visible { opacity: 1; visibility: visible; }
+    .has-expanded-panel .planet-panel:not(.expanded) {
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+    }
+    .planet-panel-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 8px;
+      margin-bottom: 7px;
+    }
     .planet-panel h3 {
-      margin: 0 0 7px;
+      margin: 0;
       color: #67e8f9;
       font-size: 13px;
       letter-spacing: 0.04em;
+    }
+    .planet-panel-toggle {
+      flex: 0 0 auto;
+      padding: 4px 7px;
+      border: 1px solid rgba(103, 232, 249, 0.55);
+      border-radius: 7px;
+      background: rgba(8, 20, 42, 0.92);
+      color: #a5f3fc;
+      font: 11px Arial, sans-serif;
+      cursor: pointer;
+    }
+    .planet-panel-toggle:hover,
+    .planet-panel-toggle:focus-visible {
+      border-color: #67e8f9;
+      background: rgba(8, 40, 62, 0.96);
+      outline: none;
     }
     .planet-panel p {
       margin: 0;
@@ -74,6 +112,37 @@
       line-height: 1.5;
       white-space: pre-line;
     }
+    .planet-panel:not(.expanded) p {
+      display: -webkit-box;
+      overflow: hidden;
+      -webkit-box-orient: vertical;
+      -webkit-line-clamp: 2;
+    }
+    .planet-panel.expanded p { display: block; }
+    .planet-panel.expanded p {
+      animation: panel-text-reveal 0.65s 0.12s both
+        cubic-bezier(0.2, 0.75, 0.25, 1);
+    }
+    @keyframes panel-text-reveal {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    #panel-atmosphere.expanded,
+    #panel-surface.expanded,
+    #panel-discovery.expanded,
+    #panel-orbit.expanded {
+      z-index: 5;
+      top: 50%;
+      right: auto;
+      bottom: auto;
+      left: 50%;
+      width: min(560px, calc(100% - 32px));
+      max-height: 78%;
+      padding: 18px 20px;
+      transform: translate(-50%, -50%);
+    }
+    .planet-panel.expanded h3 { font-size: 15px; }
+    .planet-panel.expanded p { font-size: 14px; line-height: 1.65; }
     #panel-atmosphere { top: 62px; left: 14px; }
     #panel-surface { top: 62px; right: 14px; }
     #panel-discovery { bottom: 62px; left: 14px; }
@@ -134,55 +203,132 @@
       #scene { height: 610px; }
       .planet-panel { width: calc(50% - 20px); padding: 9px; }
       .planet-panel h3 { font-size: 11px; }
+      .planet-panel-toggle { padding: 4px 5px; font-size: 10px; }
       .planet-panel p { font-size: 10px; }
+      #panel-atmosphere.expanded,
+      #panel-surface.expanded,
+      #panel-discovery.expanded,
+      #panel-orbit.expanded { padding: 14px; }
+      .planet-panel.expanded h3 { font-size: 13px; }
+      .planet-panel.expanded p { font-size: 12px; }
       #panel-atmosphere, #panel-surface { top: 56px; }
       #panel-atmosphere, #panel-discovery { left: 8px; }
       #panel-surface, #panel-orbit { right: 8px; }
       #panel-discovery, #panel-orbit { bottom: 60px; }
       .hint { font-size: 10px; padding: 8px 11px; }
     }
+    @media (prefers-reduced-motion: reduce) {
+      .planet-panel { transition-duration: 0.01ms; }
+      .planet-panel.expanded p { animation-duration: 0.01ms; }
+    }
   </style>
 </head>
 <body>
   <div id="scene">
-    <div class="hint">Bir gezegene dokun / tıkla: yakınlaş ve yılın keşiflerini gör · Sürükle: sistemi döndür · Tekerlek: yakınlaştır</div>
+    <div class="hint" data-i18n="hint">Bir gezegene dokun / tıkla: yakınlaş ve yılın keşiflerini gör · Sürükle: sistemi döndür · Tekerlek: yakınlaştır</div>
     <div id="panel-atmosphere" class="planet-panel">
-      <h3>⚡ ATMOSFER & İKLİM</h3><p></p>
+      <div class="planet-panel-header">
+        <h3 data-i18n="atmosphereTitle">⚡ ATMOSFER & İKLİM</h3>
+        <button class="planet-panel-toggle" type="button" aria-expanded="false">⤢ Büyüt</button>
+      </div>
+      <p></p>
     </div>
     <div id="panel-surface" class="planet-panel">
-      <h3>🔬 YÜZEY / YAPI</h3><p></p>
+      <div class="planet-panel-header">
+        <h3 data-i18n="surfaceTitle">🔬 YÜZEY / YAPI</h3>
+        <button class="planet-panel-toggle" type="button" aria-expanded="false">⤢ Büyüt</button>
+      </div>
+      <p></p>
     </div>
     <div id="panel-discovery" class="planet-panel">
-      <h3>🚀 SEÇİLEN DÖNEMDEKİ KEŞİFLER</h3><p></p>
+      <div class="planet-panel-header">
+        <h3 data-i18n="discoveryTitle">🚀 SEÇİLEN DÖNEMDEKİ KEŞİFLER</h3>
+        <button class="planet-panel-toggle" type="button" aria-expanded="false">⤢ Büyüt</button>
+      </div>
+      <p></p>
     </div>
     <div id="panel-orbit" class="planet-panel">
-      <h3>📡 YÖRÜNGE & UYDULAR</h3><p></p>
+      <div class="planet-panel-header">
+        <h3 data-i18n="orbitTitle">📡 YÖRÜNGE & UYDULAR</h3>
+        <button class="planet-panel-toggle" type="button" aria-expanded="false">⤢ Büyüt</button>
+      </div>
+      <p></p>
     </div>
     <div class="scene-legend">
-      <span class="legend-dot" style="background:#e2e8f0"></span>Doğal uydular
-      <span class="legend-dot" style="background:#38bdf8"></span>Yapay uydular
-      <span class="legend-dot" style="background:#fbbf24"></span>Dünya yörüngesi enkazı
-      <span class="legend-dot" style="background:#fb923c"></span>Seyrek görev kalıntıları
+      <span class="legend-dot" style="background:#e2e8f0"></span><span data-i18n="naturalMoons">Doğal uydular</span>
+      <span class="legend-dot" style="background:#38bdf8"></span><span data-i18n="artificialSatellites">Yapay uydular</span>
+      <span class="legend-dot" style="background:#fbbf24"></span><span data-i18n="earthDebris">Dünya yörüngesi enkazı</span>
+      <span class="legend-dot" style="background:#fb923c"></span><span data-i18n="missionDebris">Seyrek görev kalıntıları</span>
     </div>
     <div id="center-label"></div>
-    <button id="reset-camera" type="button">✕ Sistemin tamamına dön</button>
+    <button id="reset-camera" type="button" data-i18n="reset">✕ Sistemin tamamına dön</button>
   </div>
   <p id="scale-note">
     Gezegenlerin çevresindeki doğal uydular, Dünya yörüngesindeki yoğun enkaz
     ve gezegenler arasındaki az sayıdaki görev kalıntısı görsel amaçlıdır;
     seçilemezler. İnsan kaynaklı enkazın çoğu Dünya çevresindedir; uzay
     boşluğundaki kalıntılar seyrek ve temsili gösterilir. Görünürlük için
-    yörüngeler ve boyutlar şematik olarak büyütülmüştür. Gezegen dokuları
-    internet bağlantısı gerektirir.
+    yörüngeler ve boyutlar şematik olarak büyütülmüştür. Dünya'nın ayrıntılı yüzey haritası internet bağlantısıyla yüklenir;
+    bağlantı olmadığında dokulu yedek görünüm kullanılır.
   </p>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
   <script>
     const injectedYear = "__SELECTED_YEAR__";
+    const appLanguage = "__LANGUAGE__" === "en" ? "en" : "tr";
+    const isEnglish = appLanguage === "en";
     const selectedYear = /^\d{4}$/.test(injectedYear)
       ? Number(injectedYear)
       : new Date().getFullYear();
+    document.documentElement.lang = appLanguage;
+    const uiText = isEnglish
+      ? {
+          hint: "Click or tap a planet to zoom in and view discoveries for the selected year · Drag to rotate · Scroll to zoom",
+          atmosphereTitle: "⚡ ATMOSPHERE & CLIMATE",
+          surfaceTitle: "🔬 SURFACE / STRUCTURE",
+          discoveryTitle: "🚀 DISCOVERIES IN SELECTED PERIOD",
+          orbitTitle: "📡 ORBITS & MOONS",
+          naturalMoons: "Natural moons",
+          artificialSatellites: "Artificial satellites",
+          earthDebris: "Earth-orbit debris",
+          missionDebris: "Sparse mission remnants",
+          reset: "✕ Return to the full system",
+          scaleNote: "Natural moons, dense debris around Earth, and a few interplanetary mission remnants are shown for illustration and cannot be selected. Most human-made debris is near Earth; remnants in deep space are sparse and representative. Orbits and sizes are enlarged schematically for visibility. Earth's detailed surface map loads over the internet; a procedural textured fallback is used if it is unavailable.",
+          expand: "⤢ Enlarge",
+          collapse: "⤡ Minimize",
+          discoveryPeriod: year => year >= 2010
+            ? `DISCOVERIES, 2010–${year}`
+            : `DISCOVERIES THROUGH ${year}`,
+          noDiscoveries: year => year >= 2010
+            ? `No recorded discoveries or missions for this planet from 2010 to ${year}.`
+            : `No recorded discoveries or mission details for this planet through ${year}.`
+        }
+      : {
+          hint: "Bir gezegene dokun / tıkla: yakınlaş ve yılın keşiflerini gör · Sürükle: sistemi döndür · Tekerlek: yakınlaştır",
+          atmosphereTitle: "⚡ ATMOSFER & İKLİM",
+          surfaceTitle: "🔬 YÜZEY / YAPI",
+          discoveryTitle: "🚀 SEÇİLEN DÖNEMDEKİ KEŞİFLER",
+          orbitTitle: "📡 YÖRÜNGE & UYDULAR",
+          naturalMoons: "Doğal uydular",
+          artificialSatellites: "Yapay uydular",
+          earthDebris: "Dünya yörüngesi enkazı",
+          missionDebris: "Seyrek görev kalıntıları",
+          reset: "✕ Sistemin tamamına dön",
+          scaleNote: "Gezegenlerin çevresindeki doğal uydular, Dünya yörüngesindeki yoğun enkaz ve gezegenler arasındaki az sayıdaki görev kalıntısı görsel amaçlıdır; seçilemezler. İnsan kaynaklı enkazın çoğu Dünya çevresindedir; uzay boşluğundaki kalıntılar seyrek ve temsili gösterilir. Görünürlük için yörüngeler ve boyutlar şematik olarak büyütülmüştür. Dünya'nın ayrıntılı yüzey haritası internet bağlantısıyla yüklenir; bağlantı olmadığında dokulu yedek görünüm kullanılır.",
+          expand: "⤢ Büyüt",
+          collapse: "⤡ Küçült",
+          discoveryPeriod: year => year >= 2010
+            ? `🚀 2010–${year} DÖNEMİNDEKİ KEŞİFLER`
+            : `🚀 ${year} YILINA KADAR KEŞİFLER`,
+          noDiscoveries: year => year >= 2010
+            ? `2010–${year} dönemi için bu gezegene ait kayıtlı bir keşif veya görev bilgisi bulunmuyor.`
+            : `${year} yılına kadar bu gezegene ait kayıtlı bir keşif veya görev bilgisi bulunmuyor.`
+        };
+    document.querySelectorAll("[data-i18n]").forEach(element => {
+      element.textContent = uiText[element.dataset.i18n];
+    });
+    document.getElementById("scale-note").textContent = uiText.scaleNote;
     const container = document.getElementById("scene");
     const scene = new THREE.Scene();
     const camera = new THREE.PerspectiveCamera(48, 1, 0.1, 500);
@@ -242,13 +388,154 @@
     scene.add(interplanetaryDebris);
 
     const textureLoader = new THREE.TextureLoader();
+    textureLoader.setCrossOrigin("anonymous");
+
+    function createPlanetTexture(data, seed) {
+      const canvas = document.createElement("canvas");
+      canvas.width = 1024;
+      canvas.height = 512;
+      const context = canvas.getContext("2d");
+      const base = new THREE.Color(data.color);
+      const hue = base.getHSL({ h: 0, s: 0, l: 0 }).h * 360;
+      const saturation = Math.max(18, base.getHSL({ h: 0, s: 0, l: 0 }).s * 100);
+      let state = seed + 1;
+      const random = () => {
+        state = (state * 1664525 + 1013904223) % 4294967296;
+        return state / 4294967296;
+      };
+      const gasGiant = data.name === "Jüpiter" || data.name === "Satürn";
+      const iceGiant = data.name === "Uranüs" || data.name === "Neptün";
+      const earth = data.name === "Dünya";
+
+      context.fillStyle = `hsl(${hue}, ${saturation}%, ${earth ? 38 : 48}%)`;
+      context.fillRect(0, 0, canvas.width, canvas.height);
+
+      if (earth) {
+        context.fillStyle = "#4f8e55";
+        [
+          [[0.04, 0.30], [0.13, 0.17], [0.22, 0.22], [0.24, 0.39], [0.18, 0.53], [0.14, 0.73], [0.09, 0.60]],
+          [[0.22, 0.55], [0.30, 0.49], [0.35, 0.58], [0.32, 0.76], [0.28, 0.86], [0.25, 0.70]],
+          [[0.43, 0.27], [0.52, 0.21], [0.59, 0.28], [0.66, 0.24], [0.73, 0.31], [0.81, 0.29], [0.86, 0.42], [0.78, 0.51], [0.69, 0.47], [0.63, 0.57], [0.55, 0.49], [0.48, 0.56], [0.42, 0.43]],
+          [[0.72, 0.57], [0.80, 0.54], [0.85, 0.64], [0.80, 0.77], [0.75, 0.72]]
+        ].forEach(points => {
+          context.beginPath();
+          points.forEach(([x, y], pointIndex) => {
+            const px = x * canvas.width;
+            const py = y * canvas.height;
+            if (pointIndex === 0) context.moveTo(px, py);
+            else context.lineTo(px, py);
+          });
+          context.closePath();
+          context.fill();
+        });
+        context.fillStyle = "rgba(238, 235, 208, 0.82)";
+        context.fillRect(0, 0, canvas.width, 32);
+        context.fillRect(0, canvas.height - 32, canvas.width, 32);
+      } else if (gasGiant || iceGiant || data.name === "Venüs") {
+        const bandCount = gasGiant ? 28 : iceGiant ? 18 : 24;
+        for (let band = 0; band < bandCount; band += 1) {
+          const y = (band / bandCount) * canvas.height;
+          const bandHeight = canvas.height / bandCount + 2;
+          const lightness = (gasGiant ? 42 : 48) + Math.sin(band * 1.7 + seed) * (gasGiant ? 13 : 5);
+          context.fillStyle = `hsla(${hue + Math.sin(band) * 9}, ${saturation}%, ${lightness}%, 0.88)`;
+          context.beginPath();
+          context.moveTo(0, y);
+          for (let x = 0; x <= canvas.width; x += 32) {
+            const wave = Math.sin(x * 0.018 + band * 1.4) * 7 +
+              Math.sin(x * 0.043 + band) * 3;
+            context.lineTo(x, y + wave);
+          }
+          for (let x = canvas.width; x >= 0; x -= 32) {
+            const wave = Math.sin(x * 0.018 + band * 1.4) * 7 +
+              Math.sin(x * 0.043 + band) * 3;
+            context.lineTo(x, y + bandHeight + wave);
+          }
+          context.closePath();
+          context.fill();
+        }
+        if (data.name === "Jüpiter") {
+          context.save();
+          context.translate(710, 286);
+          context.rotate(-0.12);
+          context.fillStyle = "#b95635";
+          context.beginPath();
+          context.ellipse(0, 0, 78, 27, 0, 0, Math.PI * 2);
+          context.fill();
+          context.strokeStyle = "rgba(255, 222, 184, 0.65)";
+          context.lineWidth = 5;
+          context.beginPath();
+          context.ellipse(0, 0, 91, 34, 0, 0, Math.PI * 2);
+          context.stroke();
+          context.restore();
+        }
+      } else {
+        for (let patch = 0; patch < 240; patch += 1) {
+          const x = random() * canvas.width;
+          const y = random() * canvas.height;
+          const radius = 3 + random() * 28;
+          context.fillStyle = `hsla(${hue + random() * 16 - 8}, ${saturation}%, ${30 + random() * 38}%, ${0.08 + random() * 0.2})`;
+          context.beginPath();
+          context.ellipse(x, y, radius * (1 + random()), radius * 0.5, random() * Math.PI, 0, Math.PI * 2);
+          context.fill();
+          if (data.name === "Merkür" || data.name === "Mars") {
+            context.strokeStyle = "rgba(20, 18, 17, 0.24)";
+            context.lineWidth = 2;
+            context.beginPath();
+            context.ellipse(x, y, radius, radius * 0.55, 0, 0, Math.PI * 2);
+            context.stroke();
+          }
+        }
+      }
+
+      if (!gasGiant && !iceGiant) {
+        for (let speck = 0; speck < 3200; speck += 1) {
+          const shade = random() > 0.5 ? 255 : 12;
+          context.fillStyle = `rgba(${shade}, ${shade}, ${shade}, ${random() * 0.08})`;
+          context.fillRect(random() * canvas.width, random() * canvas.height, 1.5, 1.5);
+        }
+      }
+
+      const texture = new THREE.CanvasTexture(canvas);
+      texture.encoding = THREE.sRGBEncoding;
+      return texture;
+    }
+
+    function createSunTexture() {
+      const canvas = document.createElement("canvas");
+      canvas.width = 1024;
+      canvas.height = 512;
+      const context = canvas.getContext("2d");
+      const gradient = context.createLinearGradient(0, 0, 0, canvas.height);
+      gradient.addColorStop(0, "#ff9f36");
+      gradient.addColorStop(0.5, "#ffd36a");
+      gradient.addColorStop(1, "#f77b25");
+      context.fillStyle = gradient;
+      context.fillRect(0, 0, canvas.width, canvas.height);
+      for (let mark = 0; mark < 1800; mark += 1) {
+        const bright = Math.random() > 0.48;
+        context.fillStyle = bright
+          ? "rgba(255, 248, 190, 0.16)"
+          : "rgba(161, 49, 9, 0.12)";
+        context.beginPath();
+        context.ellipse(
+          Math.random() * canvas.width,
+          Math.random() * canvas.height,
+          2 + Math.random() * 15,
+          1 + Math.random() * 5,
+          Math.random() * Math.PI,
+          0,
+          Math.PI * 2
+        );
+        context.fill();
+      }
+      const texture = new THREE.CanvasTexture(canvas);
+      texture.encoding = THREE.sRGBEncoding;
+      return texture;
+    }
+
     const sun = new THREE.Mesh(
       new THREE.SphereGeometry(2.7, 48, 48),
-      new THREE.MeshBasicMaterial({ color: 0xffbd55 })
-    );
-    const sunTexture = textureLoader.load(
-      "https://www.solarsystemscope.com/textures/download/2k_sun.jpg",
-      texture => { texture.encoding = THREE.sRGBEncoding; sun.material.map = texture; sun.material.color.set(0xffffff); sun.material.needsUpdate = true; }
+      new THREE.MeshBasicMaterial({ map: createSunTexture(), color: 0xffe4a0 })
     );
     sun.userData.isSun = true;
     scene.add(sun);
@@ -256,23 +543,29 @@
     const planetData = [
       {
         name: "Merkür", radius: 0.38, distance: 5.2, period: 88,
-        texture: "2k_mercury.jpg", color: 0x9a9287,
+        color: 0x9a9287,
         atmosphere: "Neredeyse yok denecek kadar ince bir ekzosferi vardır. Gündüz ve gece sıcaklıkları arasında çok büyük farklar görülür.",
-        surface: "Kayalık ve kraterlerle kaplıdır; Güneş Sistemi'nin en küçük gezegenidir.",
+        surface: "Güneş'e en yakın ve Güneş Sistemi'nin en küçük gezegeni olan Merkür, yaklaşık 4,5 milyar yıl önce oluşmuştur. Çapı Dünya'nın yaklaşık üçte biridir. Güneş'e en yakın gezegen olmasına rağmen en sıcak gezegen değildir: gündüz sıcaklığı 430 °C'ye çıkarken gece -180 °C'ye kadar düşebilir. Çok ince ekzosferi ısıyı tutamadığı için sıcaklık farkı aşırıdır. Merkür, Güneş çevresindeki turunu 88 Dünya gününde, kendi ekseni etrafındaki dönüşünü yaklaşık 59 Dünya gününde tamamlar. Kayalık ve kraterli yüzeyi Ay'a benzer; kutuplardaki Güneş ışığı almayan kraterlerde su buzu bulunur. Doğal uydusu ve halkası yoktur.",
+        surfaceShort: "Güneş'e en yakın ve en küçük gezegen. Kraterli yüzeyi, aşırı sıcaklık farkları ve kutup kraterlerindeki su buzu ile dikkat çeker.",
         orbitInfo: "Güneş'e en yakın gezegendir; doğal uydusu yoktur.",
         events: [
           { year: 1974, text: "Mariner 10, Merkür'ün ilk yakın geçiş görüntülerini gönderdi." },
-          { year: 2011, text: "MESSENGER, Merkür yörüngesine giren ilk uzay aracı oldu." },
+          { year: 2011, text: "MESSENGER, Merkür yörüngesine giren ilk uzay aracı oldu ve gezegeni ayrıntılı biçimde incelemeye başladı." },
+          { year: 2012, text: "MESSENGER verileri, kutuplardaki sürekli gölgede kalan kraterlerde su buzu bulunduğuna dair güçlü kanıtlar sağladı." },
+          { year: 2015, text: "MESSENGER'in Merkür yörüngesindeki görevi sona erdi; 2011–2015 arasında yüzey ve manyetik alan hakkında kapsamlı veriler topladı." },
+          { year: 2018, text: "ESA ve JAXA'nın ortak BepiColombo görevi, Merkür'ün yapısını ve geçmişini araştırmak üzere fırlatıldı." },
           { year: 2025, text: "BepiColombo'nun Merkür yörüngesine girişi için planlanan dönem." }
         ]
       },
       {
         name: "Venüs", radius: 0.62, distance: 7.5, period: 225,
-        texture: "2k_venus_surface.jpg", color: 0xd8b477,
+        color: 0xd8b477,
         atmosphere: "Yoğun atmosferinin çoğu karbondioksittir; sülfürik asit bulutları ve güçlü sera etkisi bulunur.",
-        surface: "Kayalık yüzeyi çok sıcaktır ve yüzey basıncı Dünya'nınkinden çok daha yüksektir.",
+        surface: "Güneş'ten ikinci sıradaki Venüs, yaklaşık 4,5 milyar yıl önce oluşmuş kayalık bir gezegendir. Boyut ve yapısı Dünya'ya benzediği için Dünya'nın ikizi olarak anılır. Ancak yoğun karbondioksit atmosferinin yarattığı güçlü sera etkisi yüzünden ortalama yüzey sıcaklığı yaklaşık 465 °C'dir; bu nedenle Güneş Sistemi'nin en sıcak gezegenidir. Yüzey basıncı Dünya'nınkinden yaklaşık 93 kat fazladır. Venüs kendi ekseni etrafında çoğu gezegenin ters yönünde ve çok yavaş döner: bir dönüşü yaklaşık 243 Dünya günü, Güneş çevresindeki turu 225 Dünya günüdür. Yüzeyinde volkanlar, dağlar ve lav düzlükleri bulunur. Doğal uydusu ve halkası yoktur; parlaklığı nedeniyle Çoban Yıldızı olarak da bilinir.",
+        surfaceShort: "Dünya'ya benzeyen ama 465 °C'lik sıcaklığıyla en sıcak gezegen olan kayalık dünya.",
         orbitInfo: "Güneş çevresindeki turunu yaklaşık 225 Dünya gününde tamamlar; doğal uydusu yoktur.",
         events: [
+          { year: 1962, text: "Mariner 2, Venüs'ün yakınından geçerek başka bir gezegeni başarıyla inceleyen ilk uzay aracı oldu." },
           { year: 1970, text: "Venera 7, başka bir gezegene başarılı iniş yapan ilk araç oldu." },
           { year: 1990, text: "Magellan, radar kullanarak Venüs yüzeyinin ayrıntılı haritalamasını başlattı." },
           { year: 2021, text: "DAVINCI ve VERITAS görevleri NASA tarafından seçildi." }
@@ -280,31 +573,33 @@
       },
       {
         name: "Dünya", radius: 0.68, distance: 10, period: 365,
-        texture: "2k_earth_daymap.jpg", color: 0x3c84d8,
+        color: 0x3c84d8,
         atmosphere: "Azot ve oksijenden oluşan atmosferi yaşamı destekler ve yüzeyi zararlı ışınımdan korur.",
-        surface: "Sıvı su okyanusları, kıtalar ve aktif tektonik plakalar içerir.",
+        surface: "Güneş'ten üçüncü sıradaki Dünya, üzerinde yaşam olduğu kesin olarak bilinen tek gezegendir. Yaklaşık 4,5 milyar yıl önce gaz, toz ve kaya parçalarının birleşmesiyle oluştu; ilk dönemlerindeki yoğun ısının ardından zamanla soğuyarak bugünkü yapısını kazandı. Yüzeyinin yaklaşık %71'i sıvı suyla kaplıdır. Uygun sıcaklıklar, sıvı su ve koruyucu atmosfer yaşamı mümkün kılar. Dünya kendi ekseni etrafında yaklaşık 24 saatte döner ve Güneş çevresindeki turunu 365 gün 6 saatte tamamlar. Eksen eğikliği mevsimleri oluşturur. İç yapısı yer kabuğu, manto, sıvı dış çekirdek ve katı iç çekirdekten oluşur. Ay adlı bir doğal uydusu ve Güneş'ten gelen yüklü parçacıklara karşı koruma sağlayan güçlü bir manyetik alanı vardır. İnsanlığın en çok araştırdığı gezegen olsa da derin okyanusları, iklim sistemi ve yer altı yapısı hakkında öğrenilecek çok şey bulunur. Dünya'daki yaşamı anlamak, başka dünyalarda yaşam olasılığını değerlendirmeye de yardımcı olur.",
+        surfaceShort: "Yaşam bildiğimiz tek gezegen: yüzeyinin %71'i suyla kaplı, koruyucu atmosferi ve manyetik alanı var.",
         orbitInfo: "Bir doğal uydusu vardır: Ay. ISS, alçak Dünya yörüngesinde görev yapar.",
         events: [
-          { year: 1972, text: "Apollo 17'nin Dünya fotoğrafı, gezegenin bütün görünüşünü kayda geçirdi." },
+          { year: 1972, text: "NASA'nın Landsat programı başladı; uydular Dünya yüzeyindeki değişimleri uzun dönem boyunca izlemeye başladı. Aynı yıl Apollo 17, Dünya'nın bütün görünüşünü gösteren ünlü fotoğrafı çekti." },
           { year: 1990, text: "Voyager 1, Dünya'yı milyarlarca kilometre uzaktan görüntüledi." },
-          { year: 2020, text: "Crew Dragon Demo-2, NASA astronotlarını ISS'e taşıdı." }
+          { year: 2020, text: "Crew Dragon Demo-2, NASA astronotlarını ISS'e taşıdı. Landsat ve diğer uydu gözlemleri buzulların, ormanların ve iklimin değişimini izlemeyi sürdürüyor." }
         ]
       },
       {
         name: "Mars", radius: 0.49, distance: 13, period: 687,
-        texture: "2k_mars.jpg", color: 0xc75e43,
+        color: 0xc75e43,
         atmosphere: "İnce ve çoğunlukla karbondioksitten oluşan atmosferinde toz fırtınaları yaşanır.",
-        surface: "Demir oksitli kızıl yüzeyi; Olympus Mons ve Valles Marineris gibi büyük oluşumlar barındırır.",
+        surface: "Güneş'ten dördüncü sıradaki Mars yaklaşık 4,5 milyar yıl önce oluşmuştur. Demir minerallerinin oksitlenmesi yüzeyine kızıl rengini verir; bu yüzden Kızıl Gezegen olarak bilinir. Çapı Dünya'nın yaklaşık yarısıdır. Bir günü 24 saat 37 dakika, bir yılı 687 Dünya günüdür. İnce atmosferi çoğunlukla karbondioksitten oluşur ve ortalama yüzey sıcaklığı yaklaşık -65 °C'dir. Kayalık yüzeyinde Güneş Sistemi'nin en büyük volkanlarından Olympus Mons, derin vadiler, kraterler ve eski su akışlarının izleri bulunur. Bilim insanları Mars'ın milyarlarca yıl önce daha sıcak ve nemli olduğunu, nehirler ve göller barındırdığını düşünüyor; bu nedenle geçmiş yaşam izleri araştırılıyor. Curiosity ve Perseverance yüzeyi ve eski çevresel koşulları inceliyor. 2021'de Perseverance ile ulaşan Ingenuity, başka bir gezegende motorlu ve kontrollü uçuş yapan ilk araç oldu. Phobos ve Deimos adlı iki küçük uydusu vardır.",
+        surfaceShort: "Kızıl Gezegen: eski nehir ve göl izleri, dev volkanları ve yaşam araştırmalarıyla öne çıkar.",
         orbitInfo: "İki küçük uydusu Phobos ve Deimos'tur.",
         events: [
           { year: 1976, text: "Viking 1, Mars'a başarılı iniş yapıp yüzeyde deneyler gerçekleştirdi." },
           { year: 2012, text: "Curiosity, Gale Krateri'ne indi ve Mars'ın geçmişte yaşama elverişli koşullarını araştırdı." },
-          { year: 2021, text: "Perseverance Jezero Krateri'ne indi; Ingenuity başka bir gezegendeki ilk motorlu uçuşu yaptı." }
+          { year: 2021, text: "Perseverance Jezero Krateri'ne indi; eski göl ve yaşam izlerini araştırmaya başladı. Araçla ulaşan Ingenuity, başka bir gezegendeki ilk motorlu ve kontrollü uçuşu yaptı." }
         ]
       },
       {
         name: "Jüpiter", radius: 1.48, distance: 17, period: 4333,
-        texture: "2k_jupiter.jpg", color: 0xc99a73,
+        color: 0xc99a73,
         atmosphere: "Hidrojen ve helyum ağırlıklı dev atmosferinde Büyük Kırmızı Leke gibi uzun ömürlü fırtınalar görülür.",
         surface: "Jüpiter, Güneş Sistemi'nin Güneş'e uzaklık bakımından beşinci ve en büyük gezegenidir. Yaklaşık 4,6 milyar yıl önce Güneş'in oluşumundan arta kalan gaz ve tozlardan meydana gelmiştir. Kütlesi diğer tüm gezegenlerin toplamının iki katından fazladır; hacmi Dünya'nın yaklaşık 1.300 katıdır. Yıldız olabilecek büyüklüğe ulaşamamıştır. Yaklaşık 9,9 saatte kendi ekseni çevresinde döner; Güneş çevresindeki bir turu yaklaşık 11,86 Dünya yılı sürer. Katı bir yüzeyi yoktur: görünür kuşak ve bölgeleri hidrojen-helyum atmosferindeki zıt yönlü rüzgârlar ve amonyak-su bulutları oluşturur. Büyük Kırmızı Leke, Dünya'dan büyük ve yüzyıllardır gözlenen dev bir fırtınadır. Jüpiter'in çok soluk, ince halkaları ve Güneş Sistemi'ndeki gezegenler arasında en güçlü manyetik alanı vardır.",
         orbitInfo: "Ganymede ve Europa dahil çok sayıda doğal uydusu vardır.",
@@ -321,7 +616,7 @@
       },
       {
         name: "Satürn", radius: 1.24, distance: 22, period: 10759,
-        texture: "2k_saturn.jpg", color: 0xd8c7a1,
+        color: 0xd8c7a1,
         atmosphere: "Hidrojen ve helyumdan oluşan derin atmosferinde güçlü rüzgârlar ve kutup fırtınaları bulunur.",
         surface: "Gaz devidir; buz ve kaya parçacıklarından oluşan belirgin halkaları vardır.",
         orbitInfo: "Titan ve Enceladus dahil çok sayıda uydusu vardır.",
@@ -333,25 +628,137 @@
       },
       {
         name: "Uranüs", radius: 0.94, distance: 27, period: 30687,
-        texture: "2k_uranus.jpg", color: 0x8ed9dd,
+        color: 0x8ed9dd,
         atmosphere: "Hidrojen, helyum ve metan içerir; metan gezegene mavi-yeşil görünüm verir.",
-        surface: "Buz devidir. Eksen eğikliği nedeniyle neredeyse yan yatmış şekilde döner.",
+        surface: "Güneş'ten yedinci sıradaki Uranüs, Güneş Sistemi'nin üçüncü büyük gezegenidir ve 1781'de William Herschel tarafından keşfedilmiştir. Dünya'dan yaklaşık dört kat geniştir. Dönme ekseni 97,77° eğik olduğundan yan yatmış gibi döner; bu sıra dışı eğim eski bir büyük çarpışmadan kaynaklanmış olabilir ve yaklaşık 21 yıl süren kutup mevsimleri yaratır. Bir günü yaklaşık 17 saat, Güneş çevresindeki yılı 84 Dünya yılıdır. Buz devidir: kütlesinin çoğu, küçük kayalık çekirdeğin çevresindeki sıcak ve yoğun su, metan ve amonyak akışkanlarından oluşur. Gerçek katı yüzeyi yoktur; aşırı basınç ve sıcaklıklar bir uzay aracını yok edebilir. Atmosferindeki metan mavi-yeşil rengini verir. Soluk halkaları ve bilinen 28 uydusu vardır. Uranüs, Neptün'den çapça biraz büyük ancak kütlece daha küçüktür.",
+        surfaceShort: "Yan yatmış buz devi: 97,77° eksen eğikliği ve yaklaşık 21 yıl süren kutup mevsimleri vardır.",
         orbitInfo: "Halkaları ve bilinen doğal uyduları vardır.",
         events: [
+          { year: 1781, text: "William Herschel, teleskopla Uranüs'ü keşfetti; bu, teleskop yardımıyla keşfedilen ilk gezegendi." },
           { year: 1986, text: "Voyager 2, Uranüs'ün yanından geçen ilk ve şimdiye kadarki tek uzay aracı oldu." }
         ]
       },
       {
         name: "Neptün", radius: 0.91, distance: 31, period: 60190,
-        texture: "2k_neptune.jpg", color: 0x477de0,
+        color: 0x477de0,
         atmosphere: "Hidrojen, helyum ve metan içerir; çok hızlı rüzgârlar görülür.",
-        surface: "Uranüs gibi bir buz devidir; katı yüzey yerine derin atmosfer ve iç katmanlardan oluşur.",
+        surface: "Güneş'ten sekizinci ve en uzak gezegen olan Neptün, matematiksel hesaplarla yeri tahmin edilerek keşfedilen ilk gezegendir; 1846'da gözlemlenmiştir. Dünya'dan yaklaşık dört kat geniştir ve Güneş çevresindeki turunu 165 Dünya yılında (60.190 günde) tamamlar. Bir günü yaklaşık 16 saattir; eksen eğikliği 28° olduğundan mevsimleri vardır ve her mevsim 40 yıldan uzun sürer. Uranüs gibi bir buz devidir: kütlesinin çoğu küçük kayalık çekirdeğin üzerindeki sıcak, yoğun su, amonyak ve metan akışkanlarından oluşur. Katı bir yüzeyi yoktur. Atmosferi çoğunlukla hidrojen ve helyumdan, ayrıca mavi görünümüne katkı sağlayan metandan oluşur; oksijenden oluştuğu söylenemez. Rüzgârları saatte 2.000 km'yi aşabilir. Bilinen en büyük uydusu Triton, Neptün'ün dönüş yönünün tersine dolanır ve ince, çoğunlukla azottan oluşan bir atmosfere sahiptir. Neptün'ün çevresinde soluk halkalar da bulunur. 2011'de keşfinden bu yana Güneş çevresindeki ilk tam yörüngesini tamamlamıştır.",
+        surfaceShort: "Matematiksel olarak keşfedilen buz devi; 165 yılda Güneş çevresinde döner, rüzgârları çok hızlıdır.",
         orbitInfo: "En büyük uydusu Triton'dur; Triton gezegenin dönüş yönünün tersine dolanır.",
         events: [
+          { year: 1846, text: "Urbain Le Verrier'nin matematiksel tahminlerinin ardından Johann Galle Neptün'ü gözlemledi; gezegen matematiksel hesaplarla bulunan ilk gezegen oldu." },
+          { year: 2011, text: "Neptün, 1846'daki keşfinden sonra Güneş çevresindeki ilk tam yörüngesini tamamladı." },
           { year: 1989, text: "Voyager 2, Neptün'ün ilk yakın görüntülerini ve Triton gözlemlerini gönderdi." }
         ]
       }
     ];
+
+    const planetTranslations = {
+      "Merkür": {
+        name: "Mercury",
+        atmosphere: "Mercury has an extremely thin exosphere. Its surface experiences enormous temperature swings between day and night.",
+        surface: "Mercury is the smallest planet and the closest to the Sun. It formed about 4.5 billion years ago and is roughly one-third Earth's diameter. Despite being nearest the Sun, it is not the hottest planet: daytime temperatures can reach 430 °C, while nights can fall to -180 °C. Its thin exosphere cannot retain heat. Mercury orbits the Sun in 88 Earth days and rotates once about every 59 Earth days. Its rocky, cratered surface resembles the Moon; water ice exists in permanently shadowed polar craters. Mercury has no moons or rings.",
+        surfaceShort: "The smallest planet and closest to the Sun, with a cratered surface and ice in shadowed polar craters.",
+        orbitInfo: "The closest planet to the Sun; it has no natural moons.",
+        events: [
+          { year: 1974, text: "Mariner 10 sent back the first close-up images of Mercury." },
+          { year: 2011, text: "MESSENGER entered orbit around Mercury, becoming the first spacecraft to do so and beginning a detailed study of the planet." },
+          { year: 2012, text: "MESSENGER data provided strong evidence for water ice in permanently shadowed polar craters." },
+          { year: 2015, text: "The MESSENGER orbital mission ended after collecting extensive data on Mercury's surface and magnetic field from 2011 to 2015." },
+          { year: 2018, text: "The joint ESA-JAXA BepiColombo mission launched to investigate Mercury's structure and history." },
+          { year: 2025, text: "BepiColombo's arrival in Mercury orbit was originally planned for this period." }
+        ]
+      },
+      "Venüs": {
+        name: "Venus",
+        atmosphere: "Venus has a dense carbon-dioxide atmosphere, sulfuric-acid clouds, and an extreme greenhouse effect.",
+        surface: "Venus is the second planet from the Sun, a rocky world formed about 4.5 billion years ago. Similar in size and structure to Earth, it is sometimes called Earth's twin. Its dense carbon-dioxide atmosphere traps heat in a powerful greenhouse effect, making Venus the hottest planet, with an average surface temperature of about 465 °C. Surface pressure is about 93 times Earth's. Venus rotates very slowly in the opposite direction to most planets: one rotation takes about 243 Earth days, longer than its 225-day year. Volcanoes, mountains, and broad lava plains cover the surface. Venus has no moons or rings and is often called the Evening Star for its brilliance.",
+        surfaceShort: "Earth's near-twin, but the hottest planet, with an average surface temperature of 465 °C.",
+        orbitInfo: "It completes an orbit around the Sun in about 225 Earth days and has no natural moons.",
+        events: [
+          { year: 1962, text: "Mariner 2 flew past Venus, becoming the first spacecraft to successfully study another planet." },
+          { year: 1970, text: "The Soviet Venera 7 probe became the first spacecraft to make a successful landing on another planet and send data from its surface." },
+          { year: 1990, text: "The Magellan spacecraft began mapping Venus beneath its dense clouds using radar." },
+          { year: 2021, text: "NASA selected the DAVINCI and VERITAS missions to explore Venus." }
+        ]
+      },
+      "Dünya": {
+        name: "Earth",
+        atmosphere: "An atmosphere composed mainly of nitrogen and oxygen supports life and shields the surface from harmful radiation.",
+        surface: "Earth is the third planet from the Sun and the only world known to support life. It formed about 4.5 billion years ago from gas, dust, and rock, then cooled over time. About 71% of its surface is covered by liquid water. Suitable temperatures, liquid water, and a protective atmosphere make life possible. Earth rotates about once every 24 hours and orbits the Sun in 365 days and 6 hours. Its axial tilt causes the seasons. Its interior has a crust, mantle, liquid outer core, and solid inner core. Earth has one natural moon and a strong magnetic field that protects it from charged particles from the Sun. Although it is humanity's most studied planet, its deep oceans, climate system, and interior still hold many unanswered questions. Studying life on Earth also helps scientists assess the possibility of life on other worlds.",
+        surfaceShort: "The only known world with life: 71% ocean, with a protective atmosphere and magnetic field.",
+        orbitInfo: "Earth has one natural moon, the Moon. The ISS operates in low Earth orbit.",
+        events: [
+          { year: 1972, text: "NASA's Landsat program began monitoring changes across Earth's surface from space. Apollo 17 also took the famous full view of Earth that year." },
+          { year: 1990, text: "Voyager 1 photographed Earth from billions of kilometers away." },
+          { year: 2020, text: "Crew Dragon Demo-2 carried NASA astronauts to the ISS. Landsat and other satellite observations continue to track changes in glaciers, forests, and climate." }
+        ]
+      },
+      "Mars": {
+        name: "Mars",
+        atmosphere: "Mars has a thin atmosphere composed mostly of carbon dioxide, and it experiences large dust storms.",
+        surface: "Mars is the fourth planet from the Sun and formed about 4.5 billion years ago. Oxidized iron minerals give it a reddish appearance, earning it the name Red Planet. Its diameter is about half of Earth's. A Martian day lasts 24 hours and 37 minutes; its year lasts 687 Earth days. The thin atmosphere is mostly carbon dioxide, and the average surface temperature is about -65 °C. Its rocky landscape includes Olympus Mons, one of the largest volcanoes in the solar system, deep valleys, craters, and traces of ancient water flows. Scientists think Mars was warmer and wetter billions of years ago, with rivers and lakes, making it an important place to search for signs of past life. Curiosity and Perseverance study the surface and ancient environments. In 2021, Ingenuity became the first powered, controlled aircraft to fly on another planet. Mars has two small moons, Phobos and Deimos.",
+        surfaceShort: "The Red Planet, with ancient river and lake traces, giant volcanoes, and ongoing searches for past life.",
+        orbitInfo: "Mars has two small moons: Phobos and Deimos.",
+        events: [
+          { year: 1976, text: "Viking 1 successfully landed on Mars and conducted surface experiments." },
+          { year: 2012, text: "Curiosity landed in Gale Crater to investigate whether Mars once had conditions suitable for life." },
+          { year: 2021, text: "Perseverance landed in Jezero Crater to investigate an ancient lakebed. Its companion Ingenuity achieved the first powered, controlled flight on another planet." }
+        ]
+      },
+      "Jüpiter": {
+        name: "Jupiter",
+        atmosphere: "Jupiter's vast hydrogen-and-helium atmosphere contains long-lived storms such as the Great Red Spot.",
+        surface: "Jupiter is the fifth planet from the Sun and the largest in the solar system. It formed about 4.6 billion years ago from leftover gas and dust. Its mass is more than twice that of all the other planets combined, and its volume is about 1,300 times Earth's. It never grew large enough to become a star. Jupiter rotates in about 9.9 hours and takes about 11.86 Earth years to orbit the Sun. It has no solid surface: its visible bands and zones are clouds of ammonia and water in a hydrogen-helium atmosphere, driven by winds flowing in opposite directions. The Great Red Spot is a centuries-old storm larger than Earth. Jupiter also has faint, thin rings and the strongest magnetic field of any planet in the solar system.",
+        surfaceShort: "The solar system's largest planet, a fast-spinning gas giant with the Great Red Spot.",
+        orbitInfo: "Jupiter has many natural moons, including Ganymede and Europa.",
+        events: [
+          { year: 0, text: "Known since ancient times because it is visible to the naked eye; named after the king of the Roman gods." },
+          { year: 1610, text: "On January 7, Galileo Galilei observed Jupiter through a telescope and discovered its four largest moons over the following nights." },
+          { year: 1973, text: "On December 4, Pioneer 10 became the first spacecraft to fly past Jupiter." },
+          { year: 1979, text: "Voyager 1 and Voyager 2 made close observations of Jupiter and its moons in March and July." },
+          { year: 1995, text: "On December 7, the Galileo orbiter arrived at Jupiter and its atmospheric probe entered the planet's atmosphere." },
+          { year: 2011, text: "NASA's Juno spacecraft launched on August 5 to study Jupiter and its interior." },
+          { year: 2016, text: "Juno entered orbit around Jupiter on July 4 and began studying its poles, atmosphere, and magnetic field." },
+          { year: 2024, text: "Europa Clipper launched on October 14 to study Jupiter's icy moon Europa." }
+        ]
+      },
+      "Satürn": {
+        name: "Saturn",
+        atmosphere: "Saturn's deep hydrogen-and-helium atmosphere has powerful winds and polar storms.",
+        surface: "Saturn is a gas giant with a deep atmosphere and no solid surface. Its most striking feature is a broad system of rings made mostly of ice and rock particles. The planet is less dense than water and has many moons, including Titan and Enceladus.",
+        surfaceShort: "A gas giant famous for its wide rings made of ice and rocky particles.",
+        orbitInfo: "Saturn has many moons, including Titan and Enceladus.",
+        events: [
+          { year: 1980, text: "Voyager 1 sent back close-up images of Saturn and its moons." },
+          { year: 2004, text: "Cassini entered orbit around Saturn; the Huygens probe landed on Titan in 2005." },
+          { year: 2017, text: "The Cassini mission ended with a controlled dive into Saturn's atmosphere." }
+        ]
+      },
+      "Uranüs": {
+        name: "Uranus",
+        atmosphere: "Uranus's atmosphere contains hydrogen, helium, and methane, which gives the planet its blue-green color.",
+        surface: "Uranus is the seventh planet from the Sun and the solar system's third-largest planet. William Herschel discovered it in 1781. Its diameter is about four times Earth's. Uranus rotates on its side, with an axial tilt of 97.77 degrees, possibly caused by a giant impact long ago. This unusual tilt creates extreme seasons, including polar seasons lasting about 21 years. A day lasts about 17 hours, and a year lasts 84 Earth years. Uranus is an ice giant: most of its mass is a hot, dense fluid of water, methane, and ammonia above a small rocky core. It has no true solid surface; the extreme pressure and temperature would destroy a spacecraft. Atmospheric methane gives Uranus its blue-green hue. The planet has faint rings and 28 known moons. Uranus is slightly wider but less massive than Neptune.",
+        surfaceShort: "An ice giant tilted 97.77° on its side, with polar seasons that last about 21 years.",
+        orbitInfo: "Uranus has faint rings and 28 known moons.",
+        events: [
+          { year: 1781, text: "William Herschel discovered Uranus with a telescope, the first planet discovered with the aid of a telescope." },
+          { year: 1986, text: "Voyager 2 made the first and so far only spacecraft flyby of Uranus." }
+        ]
+      },
+      "Neptün": {
+        name: "Neptune",
+        atmosphere: "Neptune's atmosphere is mostly hydrogen and helium, with methane contributing to its blue color. Its winds are extremely fast.",
+        surface: "Neptune is the eighth and most distant planet from the Sun. It was the first planet located through mathematical predictions and was observed in 1846. It is about four times wider than Earth and takes 165 Earth years (60,190 days) to orbit the Sun. A day lasts about 16 hours. Its axial tilt is 28 degrees, giving it seasons that each last more than 40 years. Like Uranus, Neptune is an ice giant: most of its mass is a hot, dense fluid of water, ammonia, and methane above a small rocky core. It has no solid surface. Its atmosphere is mostly hydrogen and helium, with methane contributing to its blue appearance; it is not mostly oxygen. Winds can exceed 2,000 km/h. Neptune's largest known moon, Triton, orbits opposite to the planet's rotation and has a thin atmosphere made mostly of nitrogen. Neptune also has faint rings. In 2011, Neptune completed its first full orbit since its discovery.",
+        surfaceShort: "A mathematically predicted ice giant with 165-year orbits and supersonic winds.",
+        orbitInfo: "Neptune's largest moon is Triton, which orbits opposite to the planet's rotation.",
+        events: [
+          { year: 1846, text: "After Urbain Le Verrier mathematically predicted its position, Johann Galle observed Neptune, making it the first planet discovered through mathematical predictions." },
+          { year: 1989, text: "Voyager 2 sent the first close-up images of Neptune and observations of Triton." },
+          { year: 2011, text: "Neptune completed its first full orbit around the Sun since its discovery in 1846." }
+        ]
+      }
+    };
 
     const planets = [];
     const orbitingObjects = [];
@@ -397,18 +804,20 @@
       const material = new THREE.MeshStandardMaterial({
         color: data.color, roughness: 0.92, metalness: 0.02
       });
-      const texture = textureLoader.load(
-        `https://www.solarsystemscope.com/textures/download/${data.texture}`,
-        loaded => {
-          loaded.encoding = THREE.sRGBEncoding;
-          material.map = loaded;
-          material.color.set(0xffffff);
-          material.needsUpdate = true;
-        },
-        undefined,
-        () => console.warn(`Gezegen dokusu yüklenemedi; renkli model gösteriliyor: ${data.name}`)
-      );
-      material.color.set(data.color);
+      material.map = createPlanetTexture(data, index);
+      material.color.set(0xffffff);
+      if (data.name === "Dünya") {
+        textureLoader.load(
+          "https://threejs.org/examples/textures/planets/earth_day_4096.jpg",
+          loaded => {
+            loaded.encoding = THREE.sRGBEncoding;
+            material.map = loaded;
+            material.needsUpdate = true;
+          },
+          undefined,
+          () => console.warn("Dünya haritası yüklenemedi; dokulu yedek görünüm kullanılıyor.")
+        );
+      }
       const mesh = new THREE.Mesh(
         new THREE.SphereGeometry(data.radius, 48, 48),
         material
@@ -534,29 +943,25 @@
       }
 
       if (data.name === "Satürn") {
-        const ringTexture = textureLoader.load(
-          "https://www.solarsystemscope.com/textures/download/2k_saturn_ring_alpha.png",
-          loaded => {
-            loaded.encoding = THREE.sRGBEncoding;
-            const ringMaterial = new THREE.MeshBasicMaterial({
-              map: loaded,
-              color: 0xd7c7a1,
+        [
+          [1.34, 1.53, 0xb49b70, 0.72],
+          [1.56, 1.88, 0xd9c69a, 0.88],
+          [1.91, 2.02, 0x8d795b, 0.58],
+          [2.06, 2.27, 0xc6b287, 0.76]
+        ].forEach(([inner, outer, color, opacity]) => {
+          const saturnRing = new THREE.Mesh(
+            new THREE.RingGeometry(data.radius * inner, data.radius * outer, 128),
+            new THREE.MeshBasicMaterial({
+              color,
               side: THREE.DoubleSide,
               transparent: true,
-              opacity: 0.9,
-              alphaTest: 0.08
-            });
-            const saturnRing = new THREE.Mesh(
-              new THREE.RingGeometry(data.radius * 1.35, data.radius * 2.25, 96),
-              ringMaterial
-            );
-            saturnRing.rotation.x = Math.PI / 2.35;
-            mesh.add(saturnRing);
-            ringMeshes.push(saturnRing);
-          },
-          undefined,
-          () => console.warn("Satürn halka dokusu yüklenemedi.")
-        );
+              opacity
+            })
+          );
+          saturnRing.rotation.x = Math.PI / 2.35;
+          mesh.add(saturnRing);
+          ringMeshes.push(saturnRing);
+        });
       }
     });
 
@@ -576,27 +981,65 @@
     let lastFrame = performance.now();
     const centerLabel = document.getElementById("center-label");
 
+    document.querySelectorAll(".planet-panel-toggle").forEach(button => {
+      button.addEventListener("click", event => {
+        event.stopPropagation();
+        const panel = button.closest(".planet-panel");
+        const expanded = panel.classList.toggle("expanded");
+        document.getElementById("scene").classList.toggle("has-expanded-panel", expanded);
+        button.setAttribute("aria-expanded", String(expanded));
+        button.textContent = expanded ? uiText.collapse : uiText.expand;
+        panel.querySelector("p").textContent = expanded
+          ? panel.dataset.fullText
+          : panel.dataset.shortText;
+      });
+    });
+
+    function setPanelText(panelId, text, summary = null) {
+      const panel = document.getElementById(panelId);
+      const shortText = summary || (text.length > 150
+        ? `${text.slice(0, 147).replace(/\s+\S*$/, "")}…`
+        : text);
+      panel.dataset.fullText = text;
+      panel.dataset.shortText = shortText;
+      panel.querySelector("p").textContent = panel.classList.contains("expanded")
+        ? text
+        : shortText;
+    }
+
     function fillInfoPanels(data) {
-      document.querySelector("#panel-atmosphere p").textContent = data.atmosphere;
-      document.querySelector("#panel-surface p").textContent = data.surface;
-      document.querySelector("#panel-orbit p").textContent = data.orbitInfo;
+      const localizedData = isEnglish ? planetTranslations[data.name] : data;
+      const scene = document.getElementById("scene");
+      scene.classList.remove("has-expanded-panel");
+      document.querySelectorAll(".planet-panel").forEach(panel => {
+        panel.classList.remove("expanded");
+        const toggle = panel.querySelector(".planet-panel-toggle");
+        toggle.setAttribute("aria-expanded", "false");
+        toggle.textContent = uiText.expand;
+      });
+      setPanelText("panel-atmosphere", localizedData.atmosphere);
+      setPanelText(
+        "panel-surface",
+        localizedData.surface,
+        localizedData.surfaceShort
+      );
+      setPanelText("panel-orbit", localizedData.orbitInfo);
       const periodStart = selectedYear >= 2010 ? 2010 : 0;
-      const periodEvents = data.events
+      const periodEvents = localizedData.events
         .filter(event => event.year >= periodStart && event.year <= selectedYear)
         .sort((a, b) => a.year - b.year);
       const discoveryText = periodEvents.length
         ? periodEvents.map(event => event.text).join("\n")
-        : selectedYear >= 2010
-          ? `2010–${selectedYear} dönemi için bu gezegene ait kayıtlı bir keşif veya görev bilgisi bulunmuyor.`
-          : `${selectedYear} yılına kadar bu gezegene ait kayıtlı bir keşif veya görev bilgisi bulunmuyor.`;
-      document.querySelector("#panel-discovery p").textContent = discoveryText;
-      document.querySelector("#panel-discovery h3").textContent = selectedYear >= 2010
-        ? `🚀 2010–${selectedYear} DÖNEMİNDEKİ KEŞİFLER`
-        : `🚀 ${selectedYear} YILINA KADAR KEŞİFLER`;
+        : uiText.noDiscoveries(selectedYear);
+      setPanelText("panel-discovery", discoveryText);
+      document.querySelector("#panel-discovery h3").textContent =
+        uiText.discoveryPeriod(selectedYear);
       document.querySelectorAll(".planet-panel").forEach(panel => {
         panel.classList.add("visible");
       });
-      centerLabel.innerHTML = `<b>${data.name}</b><br>${selectedYear} yılı`;
+      centerLabel.innerHTML = `<b>${localizedData.name}</b><br>${
+        isEnglish ? `Year ${selectedYear}` : `${selectedYear} yılı`
+      }`;
       resetButton.classList.add("visible");
     }
 
@@ -620,8 +1063,14 @@
       selectedPlanet = null;
       targetCameraPosition = new THREE.Vector3(0, 36, 48);
       controls.target.set(0, 0, 0);
+      document.getElementById("scene").classList.remove("has-expanded-panel");
       document.querySelectorAll(".planet-panel").forEach(panel => {
         panel.classList.remove("visible");
+        panel.classList.remove("expanded");
+        panel.querySelector("p").textContent = panel.dataset.shortText || "";
+        const toggle = panel.querySelector(".planet-panel-toggle");
+        toggle.setAttribute("aria-expanded", "false");
+        toggle.textContent = uiText.expand;
       });
       centerLabel.textContent = "";
       resetButton.classList.remove("visible");
