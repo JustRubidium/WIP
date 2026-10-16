@@ -4,12 +4,19 @@ import plotly.graph_objects as go
 import plotly.io as pio
 import streamlit as st
 
-
+english = st.session_state.get("language", "tr") == "en"
 st.set_page_config(
-    page_title="İnteraktif Uzay Zaman Tüneli & Veri Platformu",
+    page_title=(
+        "Interactive Space Timeline & Data Platform"
+        if english
+        else "İnteraktif Uzay Zaman Tüneli & Veri Platformu"
+    ),
     page_icon="🪐",
     layout="wide",
 )
+
+st.session_state.setdefault("language", "tr")
+english = st.session_state.language == "en"
 
 st.markdown(
     """
@@ -79,9 +86,21 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-st.title("🪐 İNTERAKTİF UZAY ZAMAN TÜNELİ & VERİ MERKEZİ")
+_, language_column = st.columns([8, 1])
+with language_column:
+    if st.button("🇹🇷 Türkçe" if english else "🇬🇧 English", use_container_width=True):
+        st.session_state.language = "tr" if english else "en"
+        st.rerun()
+
+st.title(
+    "🪐 INTERACTIVE SPACE TIMELINE & DATA CENTER"
+    if english
+    else "🪐 İNTERAKTİF UZAY ZAMAN TÜNELİ & VERİ MERKEZİ"
+)
 st.write(
-    "Uzay tarihini, gezegen verilerini ve yörünge enkazı dağılımını"
+    "Explore space history, planetary data, and orbital debris by year."
+    if english
+    else "Uzay tarihini, gezegen verilerini ve yörünge enkazı dağılımını"
     " seçtiğiniz yıla göre inceleyin."
 )
 
@@ -453,36 +472,272 @@ haberler = {
     ],
 }
 
+english_data = {
+    1980: {
+        "baslik": "1980: Voyager Flybys and the Discovery of Ozone Depletion",
+        "makale": (
+            "Voyager 1 made its closest approach to Saturn, returning "
+            "groundbreaking data about its rings and moons. On Earth, "
+            "scientists reported the thinning of stratospheric ozone, "
+            "known as the ozone hole, for the first time."
+        ),
+        "cop_aciklama": (
+            "Low Earth orbit was relatively clear in the 1980s, with fewer "
+            "than 4,000 large debris objects in total."
+        ),
+        "cop_detay": [
+            ("Active Satellites", "Controlled spacecraft used for communications and observation."),
+            ("Rocket Bodies", "Empty fuel tanks left in orbit."),
+            ("Legacy Fragments", "Adapters left behind by early launches."),
+        ],
+    },
+    1990: {
+        "baslik": "1990: The Hubble Space Telescope Launch",
+        "makale": (
+            "The Hubble Space Telescope was placed in orbit and began "
+            "sending clear images of the distant universe."
+        ),
+        "cop_aciklama": (
+            "The accumulation of old rocket stages in orbit marked the "
+            "first signs of increasing congestion."
+        ),
+        "cop_detay": [
+            ("Active Satellites", "Second-generation satellites expanded communications."),
+            ("Inactive Satellites", "Satellites that had reached the end of their missions."),
+            ("Rocket Debris", "Fragments scattered by orbital explosions."),
+        ],
+    },
+    2000: {
+        "baslik": "2000: The International Space Station Era",
+        "makale": (
+            "The first permanent crew arrived at the International Space "
+            "Station, beginning humanity's continuous presence in space."
+        ),
+        "cop_aciklama": (
+            "The number of tracked debris objects exceeded 9,000, and "
+            "discussion of Kessler syndrome began."
+        ),
+        "cop_detay": [
+            ("Active Satellites", "GPS and broadband data networks."),
+            ("Inactive Satellites", "Abandoned spacecraft whose orbits are decaying."),
+            ("Fragmentation Debris", "Millimeter- and centimeter-sized fragments."),
+        ],
+    },
+    2010: {
+        "baslik": "2010: The Rise of Commercial Spaceflight",
+        "makale": (
+            "Private space companies transformed rocket technology, while "
+            "Curiosity successfully landed on Mars."
+        ),
+        "cop_aciklama": (
+            "As collision risks grew, active debris-removal protocols were prepared."
+        ),
+        "cop_detay": [
+            ("Active Satellites", "High-resolution Earth-observation satellites."),
+            ("Inactive Satellites", "Defunct objects posing a threat in orbit."),
+            ("Hazardous Fragments", "Small, high-velocity debris particles."),
+        ],
+    },
+    2020: {
+        "baslik": "2020: The James Webb Space Telescope and Artemis",
+        "makale": (
+            "James Webb observed some of the earliest galaxies. The Artemis "
+            "program completed critical tests for humanity's return to the Moon."
+        ),
+        "cop_aciklama": (
+            "Thousands of next-generation satellites made Low Earth Orbit "
+            "increasingly busy."
+        ),
+        "cop_detay": [
+            ("Active Satellites", "A rapidly growing fleet of mega-constellations."),
+            ("Inactive Satellites", "Large objects that remain hazardous until reentry."),
+            ("Rocket Remnants", "Metal fragments left by multistage rockets."),
+        ],
+    },
+    2026: {
+        "baslik": "2026: Multiplanetary Missions and the Sustainability Challenge",
+        "makale": (
+            "While missions search for signs of microbial life on Mars, the "
+            "number of large debris objects in Low Earth Orbit has topped 35,000."
+        ),
+        "cop_aciklama": (
+            "Orbital pollution has reached a record level, and debris-removal "
+            "satellites are being tested."
+        ),
+        "cop_detay": [
+            ("Large Hazardous Debris", "Large pieces of debris that require collision-avoidance maneuvers."),
+            ("Inactive Satellites", "Older spacecraft awaiting removal."),
+            ("Active Commercial Satellites", "Thousands of satellites providing global internet."),
+        ],
+    },
+}
+
+english_news = {
+    1980: [
+        (
+            "Voyager 1 Flies Past Saturn",
+            "November 12, 1980",
+            "During its close flyby, Voyager 1 observed Saturn's atmosphere, rings, and moons. The images revealed a more complex Saturn system than expected.",
+        ),
+        (
+            "Solar Maximum Mission Launches to Study the Sun",
+            "February 14, 1980",
+            "NASA launched the Solar Maximum Mission spacecraft to study solar activity and flares.",
+        ),
+    ],
+    1990: [
+        (
+            "Hubble Space Telescope Enters Orbit",
+            "April 24, 1990",
+            "Launched aboard Space Shuttle Discovery, Hubble began observing the universe from beyond Earth's atmosphere. Its first missions opened a new era in astronomy.",
+        ),
+        (
+            "Ulysses Sets Out to Study the Sun from a New Angle",
+            "October 6, 1990",
+            "Ulysses launched to study the Sun's polar regions and solar wind, going beyond observations limited to the Sun's equatorial plane.",
+        ),
+    ],
+    2000: [
+        (
+            "First Long-Term Crew Moves Aboard the International Space Station",
+            "November 2, 2000",
+            "With the arrival of Expedition 1, a continuous human presence began aboard the ISS. The station became an international laboratory for long-duration space research.",
+        ),
+        (
+            "Martian Surface Features Spark Scientific Interest",
+            "2000",
+            "Some features in high-resolution images from Mars Global Surveyor accelerated research and debate about whether water once existed on Mars.",
+        ),
+    ],
+    2010: [
+        (
+            "Hayabusa Returns Samples from an Asteroid to Earth",
+            "June 13, 2010",
+            "Japan's Hayabusa spacecraft delivered particles collected from asteroid Itokawa. It was the first successful mission to return samples from an asteroid.",
+        ),
+        (
+            "Dragon Reaches Orbit and Returns to Earth",
+            "December 8, 2010",
+            "SpaceX's Dragon became the first privately developed spacecraft to reach orbit and safely return to Earth, an important milestone for commercial spaceflight.",
+        ),
+    ],
+    2020: [
+        (
+            "Crew Dragon Carries Astronauts to the International Space Station",
+            "May 30, 2020",
+            "Two astronauts reached the ISS in the privately developed Crew Dragon spacecraft on NASA's Demo-2 mission, restarting crewed orbital launches from the United States.",
+        ),
+        (
+            "OSIRIS-REx Collects a Sample from Asteroid Bennu",
+            "October 20, 2020",
+            "NASA's OSIRIS-REx briefly touched Bennu's surface to collect a sample, which was delivered to Earth in 2023.",
+        ),
+        (
+            "Perseverance Begins Its Journey to Mars",
+            "July 30, 2020",
+            "NASA launched the Perseverance rover to explore Jezero Crater and collect rock samples that may one day be returned to Earth.",
+        ),
+    ],
+    2026: [
+        (
+            "Sustainability Takes Center Stage in Lunar Exploration",
+            "2026 space agenda",
+            "Plans for crewed and robotic lunar missions emphasize long-term exploration, safe landings, and responsible use of resources.",
+        ),
+        (
+            "Tracking Orbital Debris Remains a Priority",
+            "2026 space agenda",
+            "As the satellite population grows, tracking objects in orbit, reducing collision risks, and safely managing retired spacecraft remain key challenges.",
+        ),
+    ],
+}
+
 yillar = sorted(veri_tabani.keys())
 secilen_yil = st.select_slider(
-    "📅 Zaman Tüneli Yılı (Tüm Veriler Bu Yıla Göre Güncellenir):",
+    (
+        "📅 Timeline year (all data updates to this year):"
+        if english
+        else "📅 Zaman Tüneli Yılı (Tüm Veriler Bu Yıla Göre Güncellenir):"
+    ),
     options=yillar,
     value=2020 if 2020 in yillar else yillar[-1],
+    key="timeline_year",
 )
 st.divider()
 
 veri = veri_tabani[secilen_yil]
+haber_listesi = haberler[secilen_yil]
+if english:
+    translation = english_data[secilen_yil]
+    veri = {
+        **veri,
+        "baslik": translation["baslik"],
+        "makale": translation["makale"],
+        "cop_aciklama": translation["cop_aciklama"],
+        "cop_detay": [
+            {
+                **item,
+                "kategori": translated[0],
+                "aciklama": translated[1],
+            }
+            for item, translated in zip(
+                veri["cop_detay"], translation["cop_detay"]
+            )
+        ],
+    }
+    haber_listesi = [
+        {
+            **story,
+            "baslik": translated[0],
+            "tarih": translated[1],
+            "metin": translated[2],
+        }
+        for story, translated in zip(
+            haberler[secilen_yil], english_news[secilen_yil]
+        )
+    ]
+
 tab1, tab2, tab3, tab4 = st.tabs(
-    ["🪐 3D Sistem", "🗑️ Uzay Çöpleri", "📰 Gazete", "💻 Developer"]
+    (
+        ["🪐 3D System", "🗑️ Space Debris", "📰 News", "💻 Developer"]
+        if english
+        else ["🪐 3D Sistem", "🗑️ Uzay Çöpleri", "📰 Gazete", "💻 Developer"]
+    )
 )
 
 with tab1:
-    st.markdown("### 🪐 İnteraktif 3D Güneş Sistemi")
+    st.markdown(
+        "### 🪐 Interactive 3D Solar System"
+        if english
+        else "### 🪐 İnteraktif 3D Güneş Sistemi"
+    )
     simulasyon_yolu = Path(__file__).with_name("simulasyon.html")
     if not simulasyon_yolu.is_file():
         st.error(
-            "3D simülasyon dosyası bulunamadı. "
-            "simulasyon.html dosyasını WIP.py ile aynı klasöre koyun."
+            (
+                "The 3D simulation file was not found. Place simulasyon.html "
+                "in the same folder as WIP.py."
+                if english
+                else "3D simülasyon dosyası bulunamadı. "
+                "simulasyon.html dosyasını WIP.py ile aynı klasöre koyun."
+            )
         )
     else:
         simulasyon_html = simulasyon_yolu.read_text(encoding="utf-8")
         simulasyon_html = simulasyon_html.replace(
             "__SELECTED_YEAR__", str(secilen_yil)
         )
+        simulasyon_html = simulasyon_html.replace(
+            "__LANGUAGE__", "en" if english else "tr"
+        )
         st.iframe(simulasyon_html, height=700)
 
 with tab2:
-    st.markdown(f"### 🗑️ {secilen_yil} Yılı Yörünge Çöpü ve Enkaz Analizi")
+    st.markdown(
+        f"### 🗑️ {secilen_yil} Orbital Debris Analysis"
+        if english
+        else f"### 🗑️ {secilen_yil} Yılı Yörünge Çöpü ve Enkaz Analizi"
+    )
     st.write(veri["cop_aciklama"])
 
     kategoriler = [item["kategori"] for item in veri["cop_detay"]]
@@ -508,9 +763,13 @@ with tab2:
                 ),
                 hovertemplate=(
                     "<b>%{label}</b><br>"
-                    "Enkaz oranı: %{percent}<br>"
-                    "%{customdata}"
-                    "<extra></extra>"
+                    +
+                    (
+                        "Debris share: %{percent}<br>"
+                        if english
+                        else "Enkaz oranı: %{percent}<br>"
+                    )
+                    + "%{customdata}<extra></extra>"
                 ),
                 hoverlabel=dict(
                     bgcolor="#101126",
@@ -535,7 +794,12 @@ with tab2:
             dict(
                 text=(
                     f"<b>{secilen_yil}</b><br>"
-                    "<span style='font-size:12px'>ENKAZ DAĞILIMI</span>"
+                    +
+                    (
+                        "<span style='font-size:12px'>DEBRIS DISTRIBUTION</span>"
+                        if english
+                        else "<span style='font-size:12px'>ENKAZ DAĞILIMI</span>"
+                    )
                 ),
                 x=0.5,
                 y=0.5,
@@ -548,6 +812,7 @@ with tab2:
     const graph = document.getElementById('{plot_id}');
     const trace = graph.data[0];
     const colors = trace.marker.colors;
+    const english = __ENGLISH__;
     let hoveredPoint = null;
     let pinnedPoint = null;
 
@@ -572,16 +837,22 @@ with tab2:
 
       if (index === null) {
         detail.classList.remove('is-active');
-        detailTitle.textContent = 'Bir enkaz dilimini incele';
+        detailTitle.textContent = english
+          ? 'Explore a debris category'
+          : 'Bir enkaz dilimini incele';
         detailText.textContent =
-          'Açıklamayı görmek için dilimin üzerine gel veya dokun.';
+          (english
+            ? 'Hover over or tap a slice to see its description.'
+            : 'Açıklamayı görmek için dilimin üzerine gel veya dokun.');
         detail.style.borderColor = '#00E5FF';
         return;
       }
 
       detail.classList.add('is-active');
-      detailTitle.textContent =
-        `${trace.labels[index]} · %${trace.values[index]}`;
+      const percentage = english
+        ? `${trace.values[index]}%`
+        : `%${trace.values[index]}`;
+      detailTitle.textContent = `${trace.labels[index]} · ${percentage}`;
       detailText.textContent = trace.customdata[index];
       detail.style.borderColor = colors[index];
     }
@@ -628,6 +899,9 @@ with tab2:
       });
     }
     """
+    etkileisim_kodu = etkileisim_kodu.replace(
+        "__ENGLISH__", "true" if english else "false"
+    )
     grafik_html = pio.to_html(
         fig,
         full_html=False,
@@ -642,7 +916,7 @@ with tab2:
     st.iframe(
         f"""
         <!DOCTYPE html>
-        <html lang="tr">
+        <html lang="{"en" if english else "tr"}">
         <head>
             <meta charset="utf-8">
             <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -699,9 +973,15 @@ with tab2:
             <section class="debris-chart-frame">
                 {grafik_html}
                 <div id="debris-detail" class="debris-detail-card">
-                    <h3 id="debris-detail-title">Bir enkaz dilimini incele</h3>
+                    <h3 id="debris-detail-title">
+                        {"Explore a debris category" if english else "Bir enkaz dilimini incele"}
+                    </h3>
                     <p id="debris-detail-text">
-                        Açıklamayı görmek için dilimin üzerine gel veya dokun.
+                        {
+                            "Hover over or tap a slice to see its description."
+                            if english
+                            else "Açıklamayı görmek için dilimin üzerine gel veya dokun."
+                        }
                     </p>
                 </div>
             </section>
@@ -712,20 +992,36 @@ with tab2:
     )
 
 with tab3:
-    st.markdown(f"### 📰 Uzay Kroniği Gazetesi — {secilen_yil}")
-    st.caption("Seçilen yılın uzay gelişmelerinden haberler")
+    st.markdown(
+        f"### 📰 Space Chronicle — {secilen_yil}"
+        if english
+        else f"### 📰 Uzay Kroniği Gazetesi — {secilen_yil}"
+    )
+    st.caption(
+        "Space news and updates from the selected year"
+        if english
+        else "Seçilen yılın uzay gelişmelerinden haberler"
+    )
 
-    for haber in haberler[secilen_yil]:
+    for haber in haber_listesi:
         with st.container(border=True):
             resim_kolonu, yazi_kolonu = st.columns([0.9, 1.7], vertical_alignment="center")
             with resim_kolonu:
                 st.image(haber["gorsel"], width="stretch")
             with yazi_kolonu:
-                st.caption(f"UZAY HABERLERİ  •  {haber['tarih']}")
+                st.caption(
+                    f"SPACE NEWS  •  {haber['tarih']}"
+                    if english
+                    else f"UZAY HABERLERİ  •  {haber['tarih']}"
+                )
                 st.markdown(f"#### {haber['baslik']}")
                 st.write(haber["metin"])
 
 with tab4:
-    st.markdown("This Site Maded By JustRubidium")
+    st.markdown(
+        "This site was made by JustRubidium"
+        if english
+        else "This Site Maded By JustRubidium"
+    )
 
 #JSTRBDM1
