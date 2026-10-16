@@ -1,6 +1,7 @@
 from pathlib import Path
 
 import plotly.graph_objects as go
+import plotly.io as pio
 import streamlit as st
 
 
@@ -471,7 +472,7 @@ with tab1:
     if not simulasyon_yolu.is_file():
         st.error(
             "3D simülasyon dosyası bulunamadı. "
-            "solar_system_3d.html dosyasını Python dosyasıyla aynı klasöre koyun."
+            "simulasyon.html dosyasını WIP.py ile aynı klasöre koyun."
         )
     else:
         simulasyon_html = simulasyon_yolu.read_text(encoding="utf-8")
@@ -500,7 +501,7 @@ with tab2:
                 rotation=270,
                 textinfo="percent",
                 textposition="inside",
-                textfont=dict(color="#06101D", size=14, family="Arial"),
+                textfont=dict(color="#F8FAFC", size=14, family="Arial"),
                 marker=dict(
                     colors=kategori_renkleri,
                     line=dict(color="#080816", width=4),
@@ -516,6 +517,7 @@ with tab2:
                     bordercolor="#00E5FF",
                     font=dict(color="#F1F5F9", size=14),
                 ),
+                pull=[0] * len(kategoriler),
             )
         ]
     )
@@ -524,8 +526,11 @@ with tab2:
         plot_bgcolor="rgba(0, 0, 0, 0)",
         font=dict(color="#E2E8F0", family="Arial"),
         margin=dict(t=30, b=20, l=10, r=10),
-        height=410,
+        height=440,
         showlegend=False,
+        clickmode="event+select",
+        uniformtext_minsize=12,
+        uniformtext_mode="hide",
         annotations=[
             dict(
                 text=(
@@ -539,27 +544,172 @@ with tab2:
             )
         ],
     )
+    etkileisim_kodu = """
+    const graph = document.getElementById('{plot_id}');
+    const trace = graph.data[0];
+    const colors = trace.marker.colors;
+    let hoveredPoint = null;
+    let pinnedPoint = null;
 
-    grafik_kolonu, detay_kolonu = st.columns([1.15, 0.85])
-    with grafik_kolonu:
-        st.caption(
-            "Bir dilimin üzerine gelin veya dokunun; kategori açıklaması görünür."
-        )
-        st.plotly_chart(fig, width="stretch")
-    with detay_kolonu:
-        st.markdown("#### 📋 Enkaz Kategorileri")
-        for item, renk in zip(veri["cop_detay"], kategori_renkleri):
-            st.markdown(
-                f"""
-                <div class="debris-card" style="border-color: {renk};">
-                    <div class="debris-title">
-                        📌 {item['kategori']} — %{item['oran']}
-                    </div>
-                    <div class="debris-desc">{item['aciklama']}</div>
+    function showPoint(index) {
+      const detail = document.getElementById('debris-detail');
+      const detailTitle = document.getElementById('debris-detail-title');
+      const detailText = document.getElementById('debris-detail-text');
+      if (!detail || !detailTitle || !detailText) return;
+
+      const pulls = trace.labels.map((_, pointIndex) =>
+        pointIndex === index ? 0.13 : 0
+      );
+      Plotly.animate(
+        graph,
+        [{ data: [{ pull: pulls }], traces: [0] }],
+        {
+          mode: 'immediate',
+          frame: { duration: 360, redraw: false },
+          transition: { duration: 360, easing: 'cubic-in-out' }
+        }
+      );
+
+      if (index === null) {
+        detail.classList.remove('is-active');
+        detailTitle.textContent = 'Bir enkaz dilimini incele';
+        detailText.textContent =
+          'Açıklamayı görmek için dilimin üzerine gel veya dokun.';
+        detail.style.borderColor = '#00E5FF';
+        return;
+      }
+
+      detail.classList.add('is-active');
+      detailTitle.textContent =
+        `${trace.labels[index]} · %${trace.values[index]}`;
+      detailText.textContent = trace.customdata[index];
+      detail.style.borderColor = colors[index];
+    }
+
+    graph.on('plotly_hover', event => {
+      hoveredPoint = event.points[0].pointNumber;
+      showPoint(hoveredPoint);
+    });
+    graph.on('plotly_unhover', () => {
+      hoveredPoint = null;
+      showPoint(pinnedPoint);
+    });
+    graph.on('plotly_click', event => {
+      const clickedPoint = event.points[0].pointNumber;
+      pinnedPoint = pinnedPoint === clickedPoint ? null : clickedPoint;
+      showPoint(pinnedPoint === null ? hoveredPoint : pinnedPoint);
+    });
+
+    const slices = Array.from(graph.querySelectorAll('g.slice path'));
+    const sliceLabels = Array.from(graph.querySelectorAll('g.slice text'));
+    if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      slices.forEach(slice => {
+        slice.style.transformBox = 'fill-box';
+        slice.style.transformOrigin = 'center';
+        slice.style.transition =
+          'opacity 900ms ease, transform 1100ms cubic-bezier(0.2, 0.75, 0.25, 1)';
+        slice.style.opacity = '0';
+        slice.style.transform = 'scale(0.15)';
+      });
+      sliceLabels.forEach(label => {
+        label.style.transition = 'opacity 700ms ease';
+        label.style.opacity = '0';
+      });
+      requestAnimationFrame(() => {
+        slices.forEach((slice, index) => {
+          setTimeout(() => {
+            slice.style.opacity = '1';
+            slice.style.transform = 'scale(1)';
+          }, 180 + index * 420);
+        });
+        sliceLabels.forEach((label, index) => {
+          setTimeout(() => { label.style.opacity = '1'; }, 420 + index * 300);
+        });
+      });
+    }
+    """
+    grafik_html = pio.to_html(
+        fig,
+        full_html=False,
+        include_plotlyjs="cdn",
+        config={
+            "displayModeBar": False,
+            "responsive": True,
+            "scrollZoom": False,
+        },
+        post_script=etkileisim_kodu,
+    )
+    st.iframe(
+        f"""
+        <!DOCTYPE html>
+        <html lang="tr">
+        <head>
+            <meta charset="utf-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1">
+            <style>
+                * {{ box-sizing: border-box; }}
+                html, body {{
+                    margin: 0;
+                    padding: 0;
+                    background: transparent;
+                    font-family: Arial, sans-serif;
+                }}
+                .debris-chart-frame {{
+                    padding: 14px;
+                    border: 1px solid rgba(0, 255, 255, 0.45);
+                    border-radius: 16px;
+                    background: linear-gradient(135deg, #0d0d24 0%, #050511 100%);
+                    box-shadow: 0 0 24px rgba(0, 255, 255, 0.12);
+                }}
+                .debris-detail-card {{
+                    margin: 2px 10px 8px;
+                    padding: 16px 20px;
+                    border: 1px solid #00E5FF;
+                    border-radius: 12px;
+                    background: linear-gradient(135deg, #131336 0%, #08081a 100%);
+                    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+                    color: #cbd5e1;
+                    font: 14px/1.6 Arial, sans-serif;
+                    opacity: 0.88;
+                    transform: translateY(4px);
+                    transition:
+                        opacity 0.32s ease,
+                        transform 0.38s cubic-bezier(0.2, 0.75, 0.25, 1),
+                        border-color 0.32s ease,
+                        box-shadow 0.32s ease;
+                }}
+                .debris-detail-card.is-active {{
+                    opacity: 1;
+                    transform: translateY(0);
+                    box-shadow: 0 0 22px rgba(0, 229, 255, 0.16);
+                }}
+                .debris-detail-card h3 {{
+                    margin: 0 0 5px;
+                    color: #00ffff;
+                    font-size: 17px;
+                }}
+                .debris-detail-card p {{ margin: 0; }}
+                @media (max-width: 600px) {{
+                    .debris-chart-frame {{ padding: 5px; }}
+                    .debris-detail-card {{ margin: 0 6px 6px; padding: 12px; }}
+                }}
+            </style>
+        </head>
+        <body>
+            <section class="debris-chart-frame">
+                {grafik_html}
+                <div id="debris-detail" class="debris-detail-card">
+                    <h3 id="debris-detail-title">Bir enkaz dilimini incele</h3>
+                    <p id="debris-detail-text">
+                        Açıklamayı görmek için dilimin üzerine gel veya dokun.
+                    </p>
                 </div>
-                """,
-                unsafe_allow_html=True,
-            )
+            </section>
+        </body>
+        </html>
+        """,
+        height=570,
+    )
 
 with tab3:
     st.markdown(f"### 📰 Uzay Kroniği Gazetesi — {secilen_yil}")
@@ -577,5 +727,3 @@ with tab3:
 
 with tab4:
     st.markdown("This Site Maded By JustRubidium")
-
-#JSTRBDM1
