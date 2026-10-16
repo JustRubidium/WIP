@@ -1075,5 +1075,50 @@ with tab4:
         """,
         unsafe_allow_html=True,
     )
+    st.markdown(
+        f"""
+        <section style="
+            max-width: 760px;
+            margin: 18px auto 28px;
+            padding: 24px 30px;
+            border: 1px solid rgba(0, 229, 255, 0.35);
+            border-radius: 14px;
+            background: linear-gradient(135deg, #0d0d24 0%, #050511 100%);
+            box-shadow: 0 0 20px rgba(0, 229, 255, 0.09);
+            color: #cbd5e1;
+            font-family: Arial, sans-serif;
+        ">
+            <h3 style="
+                margin: 0 0 16px;
+                color: #00ffff;
+                font-family: 'Courier New', monospace;
+                letter-spacing: 0.8px;
+                text-align: center;
+            ">{'Sources' if english else 'Kaynakça'}</h3>
+            <ul style="
+                display: grid;
+                gap: 10px;
+                margin: 0;
+                padding-left: 20px;
+                line-height: 1.55;
+            ">
+                <li><a href="https://science.nasa.gov/universe/stars/types/" target="_blank" rel="noopener noreferrer" style="color:#a5f3fc;">NASA Science — Types of Stars</a></li>
+                <li><a href="https://science.nasa.gov/universe/stars/" target="_blank" rel="noopener noreferrer" style="color:#a5f3fc;">NASA Science — Stars</a></li>
+                <li><a href="https://science.nasa.gov/universe/glossary/" target="_blank" rel="noopener noreferrer" style="color:#a5f3fc;">NASA Science — Universe Glossary (Blue Supergiant)</a></li>
+                <li><a href="https://tua.gov.tr/tr/blog/evren/supernova-nedir" target="_blank" rel="noopener noreferrer" style="color:#a5f3fc;">Türkiye Uzay Ajansı — {'What Is a Supernova?' if english else 'Süpernova Nedir?'}</a></li>
+                <li><a href="https://bilimgenc.tubitak.gov.tr/makale/gunesten-binlerce-kat-buyuk-yildizlar" target="_blank" rel="noopener noreferrer" style="color:#a5f3fc;">TÜBİTAK Bilim Genç — {'Stars Thousands of Times Larger Than the Sun' if english else 'Güneş’ten Binlerce Kat Büyük Yıldızlar'}</a></li>
+                <li><a href="https://bilimgenc.tubitak.gov.tr/makale/bir-dev-yildizin-yuzeyinde-devasa-boyutlarda-kabarciklar-gozlendi" target="_blank" rel="noopener noreferrer" style="color:#a5f3fc;">TÜBİTAK Bilim Genç — {'Giant Bubbles Observed on the Surface of a Giant Star' if english else 'Bir Dev Yıldızın Yüzeyinde Devasa Boyutlarda Kabarcıklar Gözlendi'}</a></li>
+                <li><a href="https://www.britannica.com/science/star-astronomy" target="_blank" rel="noopener noreferrer" style="color:#a5f3fc;">Encyclopaedia Britannica — Star (Astronomy)</a></li>
+                <li><a href="https://science.nasa.gov/mercury/facts/" target="_blank" rel="noopener noreferrer" style="color:#a5f3fc;">NASA Science — Mercury Facts</a></li>
+                <li><a href="https://science.nasa.gov/mercury/exploration/" target="_blank" rel="noopener noreferrer" style="color:#a5f3fc;">NASA Science — Mercury Exploration</a></li>
+                <li><a href="https://www.esa.int/Science_Exploration/Space_Science/BepiColombo" target="_blank" rel="noopener noreferrer" style="color:#a5f3fc;">European Space Agency — BepiColombo</a></li>
+                <li><a href="https://science.nasa.gov" target="_blank" rel="noopener noreferrer" style="color:#a5f3fc;">NASA Science — Official Website</a></li>
+                <li><a href="https://tua.gov.tr" target="_blank" rel="noopener noreferrer" style="color:#a5f3fc;">{'Turkish Space Agency — Official Website' if english else 'Türkiye Uzay Ajansı — Resmî Web Sitesi'}</a></li>
+                <li><a href="https://bilimgenc.tubitak.gov.tr" target="_blank" rel="noopener noreferrer" style="color:#a5f3fc;">{'TÜBİTAK Bilim Genç — Official Website' if english else 'TÜBİTAK Bilim Genç — Resmî Web Sitesi'}</a></li>
+            </ul>
+        </section>
+        """,
+        unsafe_allow_html=True,
+    )
 
 #JSTRBDM1
