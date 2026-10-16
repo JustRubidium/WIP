@@ -1019,9 +1019,59 @@ with tab3:
 
 with tab4:
     st.markdown(
-        "This site was made by JustRubidium"
-        if english
-        else "This Site Maded By JustRubidium"
+        f"""
+        <section style="
+            max-width: 760px;
+            margin: 24px auto;
+            padding: 30px 34px;
+            border: 1px solid rgba(0, 229, 255, 0.48);
+            border-radius: 16px;
+            background: linear-gradient(135deg, #131336 0%, #08081a 100%);
+            box-shadow: 0 0 26px rgba(0, 229, 255, 0.13);
+            color: #e2e8f0;
+            font-family: Arial, sans-serif;
+            text-align: center;
+        ">
+            <h2 style="
+                margin: 0 0 8px;
+                color: #00ffff;
+                font-family: 'Courier New', monospace;
+                letter-spacing: 1px;
+            ">Scripter / Developer: JustRubidium</h2>
+            <div style="
+                width: 72px;
+                height: 2px;
+                margin: 22px auto;
+                background: linear-gradient(90deg, #00e5ff, #a78bfa);
+                box-shadow: 0 0 12px rgba(0, 229, 255, 0.65);
+            "></div>
+            <h3 style="
+                margin: 0 0 20px;
+                color: #67e8f9;
+                font-family: 'Courier New', monospace;
+                letter-spacing: 0.6px;
+            ">{'Thanks For Supports' if english else 'Destekleri İçin Teşekkürler'}</h3>
+            <div style="
+                display: grid;
+                gap: 11px;
+                max-width: 460px;
+                margin: 0 auto;
+            ">
+                <div style="
+                    padding: 13px 16px;
+                    border: 1px solid rgba(167, 139, 250, 0.55);
+                    border-radius: 10px;
+                    background: rgba(8, 8, 26, 0.72);
+                    color: #c4b5fd;
+                    font-weight: 700;
+                ">Yağmur Ruze <span style="color:#94a3b8;font-weight:400">({'Team Captain' if english else 'Takım Kaptanı'})</span></div>
+                <div style="padding: 11px 16px; color: #dbeafe;">Beyzanur</div>
+                <div style="padding: 11px 16px; color: #dbeafe;">Hüma</div>
+                <div style="padding: 11px 16px; color: #dbeafe;">Beyza Sami</div>
+            </div>
+        </section>
+        """,
+        unsafe_allow_html=True,
     )
 
 #JSTRBDM1
