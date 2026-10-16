@@ -1057,17 +1057,19 @@ with tab4:
                 max-width: 460px;
                 margin: 0 auto;
             ">
-                <div style="
+                <a href="https://www.spaceappschallenge.org/2026/find-a-team/aeon-labs/?tab=members" target="_blank" rel="noopener noreferrer" style="
                     padding: 13px 16px;
                     border: 1px solid rgba(167, 139, 250, 0.55);
                     border-radius: 10px;
                     background: rgba(8, 8, 26, 0.72);
                     color: #c4b5fd;
                     font-weight: 700;
-                ">Yağmur Ruze <span style="color:#94a3b8;font-weight:400">({'Team Captain' if english else 'Takım Kaptanı'})</span></div>
-                <div style="padding: 11px 16px; color: #dbeafe;">Beyzanur</div>
-                <div style="padding: 11px 16px; color: #dbeafe;">Hüma</div>
-                <div style="padding: 11px 16px; color: #dbeafe;">Beyza Sami</div>
+                    text-decoration: none;
+                    transition: border-color 0.25s ease, background 0.25s ease, transform 0.25s ease;
+                " onmouseover="this.style.borderColor='#00e5ff';this.style.background='rgba(0,229,255,0.1)';this.style.transform='translateY(-2px)'" onmouseout="this.style.borderColor='rgba(167, 139, 250, 0.55)';this.style.background='rgba(8, 8, 26, 0.72)';this.style.transform='translateY(0)'">Yağmur Ruze <span style="color:#94a3b8;font-weight:400">({'Team Captain' if english else 'Takım Kaptanı'})</span></a>
+                <a href="https://www.spaceappschallenge.org/2026/find-a-team/aeon-labs/?tab=members" target="_blank" rel="noopener noreferrer" style="padding: 11px 16px; border-radius: 10px; color: #dbeafe; text-decoration: none; transition: color 0.25s ease, background 0.25s ease;" onmouseover="this.style.color='#00e5ff';this.style.background='rgba(0,229,255,0.08)'" onmouseout="this.style.color='#dbeafe';this.style.background='transparent'">Beyzanur</a>
+                <a href="https://www.spaceappschallenge.org/2026/find-a-team/aeon-labs/?tab=members" target="_blank" rel="noopener noreferrer" style="padding: 11px 16px; border-radius: 10px; color: #dbeafe; text-decoration: none; transition: color 0.25s ease, background 0.25s ease;" onmouseover="this.style.color='#00e5ff';this.style.background='rgba(0,229,255,0.08)'" onmouseout="this.style.color='#dbeafe';this.style.background='transparent'">Hüma</a>
+                <a href="https://www.spaceappschallenge.org/2026/find-a-team/aeon-labs/?tab=members" target="_blank" rel="noopener noreferrer" style="padding: 11px 16px; border-radius: 10px; color: #dbeafe; text-decoration: none; transition: color 0.25s ease, background 0.25s ease;" onmouseover="this.style.color='#00e5ff';this.style.background='rgba(0,229,255,0.08)'" onmouseout="this.style.color='#dbeafe';this.style.background='transparent'">Beyza Sami</a>
             </div>
         </section>
         """,
