@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#020202">
+    <title>About JustRubidium</title>
+    <style>
+        :root {
+            color-scheme: dark;
+            font-family: Arial, sans-serif;
+            background: #020202;
+            color: #e9e5e5;
+        }
+        * { box-sizing: border-box; }
+        body {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 28px 20px 48px;
+            background: #020202;
+        }
+        h1, h2 {
+            color: #f30202bd;
+            text-align: center;
+        }
+        h1 { font-size: clamp(28px, 5vw, 44px); }
+        h2 { font-size: 24px; }
+        p { color: #0084ff; }
+        .intro {
+            color: #0084ff;
+            font-size: 18px;
+            text-align: center;
+        }
+        .about {
+            margin-top: 32px;
+            line-height: 1.7;
+        }
+        hr {
+            margin: 24px 0;
+            border: 0;
+            border-top: 1px solid #f30202bd;
+        }
+        a {
+            color: #32fc00;
+            text-decoration: none;
+        }
+        a:hover, a:focus-visible {
+            color: #a5ff8e;
+            text-decoration: underline;
+        }
+        .social-links {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px 22px;
+        }
+        .profile-image {
+            display: block;
+            width: 200px;
+            height: 200px;
+            margin: 24px auto;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+        .project-link {
+            display: grid;
+            justify-items: center;
+            gap: 12px;
+            text-align: center;
+        }
+        .project-image {
+            width: min(100%, 420px);
+            height: auto;
+            border-radius: 12px;
+        }
+        @media (max-width: 520px) {
+            body { padding: 20px 16px 36px; }
+            .social-links { flex-direction: column; }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>WELCOME TO MY WEBSITE</h1>
+        <p class="intro">This site is about me.</p>
+    </header>
+
+    <main>
+        <section class="about" aria-label="About JustRubidium">
+            First of all, thank you for visiting my website. My name is
+            JustRubidium. I'm a beginner programmer and scripter, and I want
+            to become a cybersecurity professional. This is my first project.
+            I made this website when I was 14, so it may look simple, but
+            that's okay! If you're interested, you can find my social media
+            and Discord server below.
+
+            <hr>
+            <nav class="social-links" aria-label="Social links">
+                <a href="https://discord.gg/A8UenhHsE" target="_blank" rel="noopener noreferrer">Turkish Discord Server</a>
+                <a href="https://www.instagram.com/just_rubidium/" target="_blank" rel="noopener noreferrer">Instagram</a>
+                <a href="https://www.youtube.com/@just_rubidium" target="_blank" rel="noopener noreferrer">YouTube</a>
+            </nav>
+        </section>
+
+        <hr>
+
+        <section aria-labelledby="profile-title">
+            <h2 id="profile-title">JustRubidium</h2>
+            <img
+                class="profile-image"
+                src="https://instagram.fist7-1.fna.fbcdn.net/v/t51.82787-19/811373926_17936092881367815_1515857859023466039_n.jpg?stp=dst-jpg_s150x150_tt6&amp;_nc_cat=111&amp;_nc_map=urlgen_bucketless&amp;ccb=7-5&amp;_nc_sid=f7ccc5&amp;efg=eyJ2ZW5jb2RlX3RhZyI6InByb2ZpbGVfcGljLnd3dy42NzAuQzMifQ%3D%3D&amp;_nc_ohc=5udmcWVnrCEQ7kNvwGkTuhw&amp;_nc_oc=AdpKF5xQvZDbB56OCAKu_t1No6oR7ic1riusTnsEv77xFg0ulO7Ljml6nAi38fsvrt1TmvtlQbx1rzXBYAK0uigc&amp;_nc_zt=24&amp;_nc_ht=instagram.fist7-1.fna&amp;_nc_gid=w7BwfWbmJ7W7b5fidEkj0Q&amp;_nc_ss=7b6a8&amp;oh=00_AQN9WpMXn0jpQhFoMFlMsgZ2D5zKIp_xH9g9jnlnPSc__Q&amp;oe=6AD9A059"
+                alt="JustRubidium"
+                width="200"
+                height="200"
+                referrerpolicy="no-referrer"
+            >
+            <p class="intro">JustRubidium's Projects</p>
+            <a
+                class="project-link"
+                href="https://jh6nuzc7d953ksbktenwmy.streamlit.app/"
+                target="_blank"
+                rel="noopener noreferrer"
+            >
+                <span>Interactive Space and Time Project</span>
+                <img
+                    class="project-image"
+                    src="https://storage.googleapis.com/s4a-prod-share-preview/default/st_app_screenshot_image/a07c15ed-63dc-4cb6-9043-faf0062a6a57/Home_Page.png"
+                    alt="NASA Space Apps Challenge project preview"
+                >
+            </a>
+        </section>
+    </main>
+</body>
+</html>
