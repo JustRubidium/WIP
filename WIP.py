@@ -1037,7 +1037,7 @@ with tab4:
                 color: #00ffff;
                 font-family: 'Courier New', monospace;
                 letter-spacing: 1px;
-            ">Scripter / Developer: JustRubidium</h2>
+            ">Scripter / Developer: <a href="/app/static/Can%20keyfisi.html" target="_blank" rel="noopener noreferrer" style="color:inherit;text-decoration:none;">JustRubidium</a></h2>
             <div style="
                 width: 72px;
                 height: 2px;
