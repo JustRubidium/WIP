@@ -4,16 +4,33 @@ import plotly.graph_objects as go
 import plotly.io as pio
 import streamlit as st
 
+about_page = st.query_params.get("about") == "justrubidium"
 english = st.session_state.get("language", "tr") == "en"
 st.set_page_config(
     page_title=(
-        "Interactive Space Timeline & Data Platform"
-        if english
-        else "İnteraktif Uzay Zaman Tüneli & Veri Platformu"
+        "About JustRubidium"
+        if about_page
+        else (
+            "Interactive Space Timeline & Data Platform"
+            if english
+            else "İnteraktif Uzay Zaman Tüneli & Veri Platformu"
+        )
     ),
     page_icon="🪐",
     layout="wide",
 )
+
+if about_page:
+    about_path = Path(__file__).with_name("static") / "Can keyfisi.html"
+    if not about_path.is_file():
+        st.error(
+            "About page not found. Make sure static/Can keyfisi.html "
+            "is included in the repository."
+        )
+        st.stop()
+
+    st.html(about_path.read_text(encoding="utf-8"))
+    st.stop()
 
 st.session_state.setdefault("language", "tr")
 english = st.session_state.language == "en"
@@ -1037,7 +1054,7 @@ with tab4:
                 color: #00ffff;
                 font-family: 'Courier New', monospace;
                 letter-spacing: 1px;
-            ">Scripter / Developer: <a href="/app/static/Can%20keyfisi.html" target="_blank" rel="noopener noreferrer" style="color:inherit;text-decoration:none;">JustRubidium</a></h2>
+            ">Scripter / Developer: <a href="?about=justrubidium" target="_blank" rel="noopener noreferrer" style="color:inherit;text-decoration:none;">JustRubidium</a></h2>
             <div style="
                 width: 72px;
                 height: 2px;
