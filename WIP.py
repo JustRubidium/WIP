@@ -1439,6 +1439,17 @@ with tab4:
         )
 
 with tab5:
+    st.toggle(
+        "🐈 Mouse-following cat"
+        if english
+        else "🐈 Mouse'u takip eden kedi",
+        key="cat_cursor_enabled",
+        help=(
+            "Turn on to have the cat follow your mouse until you turn it off."
+            if english
+            else "Açınca kedi, kapatana kadar mouse'unu takip eder."
+        ),
+    )
     st.markdown(
         f"""
         <section style="
@@ -1542,5 +1553,84 @@ with tab5:
         """,
         unsafe_allow_html=True,
     )
+st.html(
+    f"""
+    <script>
+    (() => {{
+        const previous = window.__oiiaoiiaCatCursor;
+        if (previous) {{
+            window.removeEventListener("pointermove", previous.move);
+            cancelAnimationFrame(previous.frame);
+            previous.element.remove();
+            delete window.__oiiaoiiaCatCursor;
+        }}
+        if (!{str(st.session_state.get("cat_cursor_enabled", False)).lower()}) return;
+
+        const cat = document.createElement("img");
+        cat.src = "https://media.tenor.com/blwK0rdIId8AAAAj/cat-oiiaoiia-cat.gif";
+        cat.alt = "";
+        cat.setAttribute("aria-hidden", "true");
+        cat.style.cssText = [
+            "position:fixed",
+            "left:0",
+            "top:0",
+            "width:88px",
+            "height:88px",
+            "object-fit:contain",
+            "pointer-events:none",
+            "z-index:2147483647",
+            "transform:translate(-50%,-50%)",
+            "display:none"
+        ].join(";");
+        document.body.appendChild(cat);
+
+        const state = {{
+            element: cat,
+            frame: 0,
+            x: 0,
+            y: 0,
+            targetX: 0,
+            targetY: 0,
+            lastFrame: 0
+        }};
+        state.animate = (time) => {{
+            const elapsed = state.lastFrame
+                ? Math.min((time - state.lastFrame) / 1000, 0.05)
+                : 0;
+            state.lastFrame = time;
+            const dx = state.targetX - state.x;
+            const dy = state.targetY - state.y;
+            const distance = Math.hypot(dx, dy);
+            const step = 180 * elapsed;
+            if (distance > 0) {{
+                const movement = Math.min(step, distance);
+                state.x += (dx / distance) * movement;
+                state.y += (dy / distance) * movement;
+                cat.style.left = state.x + "px";
+                cat.style.top = state.y + "px";
+            }}
+            state.frame = requestAnimationFrame(state.animate);
+        }};
+        state.move = (event) => {{
+            state.targetX = event.clientX + 44;
+            state.targetY = event.clientY + 20;
+            if (!state.lastFrame) {{
+                state.x = state.targetX;
+                state.y = state.targetY;
+                cat.style.left = state.x + "px";
+                cat.style.top = state.y + "px";
+            }}
+            cat.style.display = "block";
+            if (!state.frame) {{
+                state.frame = requestAnimationFrame(state.animate);
+            }}
+        }};
+        window.__oiiaoiiaCatCursor = state;
+        window.addEventListener("pointermove", state.move, {{ passive: true }});
+    }})();
+    </script>
+    """,
+    unsafe_allow_javascript=True,
+)
 
 #JSTRBDM1
