@@ -1,8 +1,10 @@
 from pathlib import Path
+from html import escape
 
 import plotly.graph_objects as go
 import plotly.io as pio
 import streamlit as st
+from Uzay import get_all_sources, get_articles
 
 about_page = st.query_params.get("about") == "justrubidium"
 english = st.session_state.get("language", "tr") == "en"
@@ -102,7 +104,6 @@ st.markdown(
     """,
     unsafe_allow_html=True,
 )
-
 _, language_column = st.columns([8, 1])
 with language_column:
     if st.button("🇹🇷 Türkçe" if english else "🇬🇧 English", use_container_width=True):
@@ -489,6 +490,308 @@ haberler = {
     ],
 }
 
+def render_no_year_finding():
+    st.info(
+        "No discovery or development was found for this year."
+        if english
+        else "Bu yıla dair keşif bulunamadı."
+    )
+
+
+def render_editorial_cards(articles, scope):
+    cards = []
+    for article in articles:
+        if isinstance(article, dict):
+            title = article["title"][1 if english else 0]
+            summary = article["summary"][1 if english else 0]
+            detail = article["detail"][1 if english else 0]
+            image_url = article["image"]
+        else:
+            title = article[1] if english else article[0]
+            summary = article[3] if english else article[2]
+            detail = article[5] if english else article[4]
+            image_url = article[6]
+        image = escape(image_url, quote=True)
+        cards.append(
+            f"""
+            <button class="editorial-card" type="button"
+                data-title="{escape(title, quote=True)}"
+                data-summary="{escape(summary, quote=True)}"
+                data-detail="{escape(detail, quote=True)}"
+                data-image="{image}">
+                <img src="{image}" alt="{escape(title, quote=True)}" loading="lazy">
+                <span class="editorial-copy">
+                    <strong>{escape(title)}</strong>
+                    <span>{escape(summary)}</span>
+                    <small>{"Double-click to read more" if english else "Ayrıntılı okumak için çift tıkla"}</small>
+                </span>
+            </button>
+            """
+        )
+
+    st.html(
+        f"""
+        <style>
+            #{scope} {{ color: #f4f7ff; }}
+            .editorial-grid {{ display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }}
+            .editorial-card {{ padding: 0; border: 1px solid #30405f; border-radius: 14px; overflow: hidden; background: #0c1222; color: inherit; text-align: left; cursor: zoom-in; }}
+            .editorial-card:hover {{ border-color: #5bd5ff; transform: translateY(-2px); }}
+            .editorial-card img {{ display: block; width: 100%; height: 220px; object-fit: cover; }}
+            .editorial-copy {{ display: grid; gap: 9px; padding: 16px; }}
+            .editorial-copy strong {{ font-size: 1.15rem; }}
+            .editorial-copy small {{ color: #7ddfff; }}
+            .editorial-modal {{ display: none; position: fixed; inset: 0; z-index: 999999; padding: 3vh 3vw; background: rgba(0,0,0,.88); align-items: center; justify-content: center; }}
+            .editorial-modal.open {{ display: flex; }}
+            .editorial-modal-content {{ position: relative; overflow: auto; width: min(1100px, 94vw); max-height: 94vh; border: 1px solid #3d6487; border-radius: 18px; background: #080d19; color: #f4f7ff; }}
+            .editorial-modal-content img {{ width: 100%; max-height: 48vh; object-fit: cover; }}
+            .editorial-modal-copy {{ padding: 26px clamp(18px, 4vw, 52px) 36px; }}
+            .editorial-modal-copy h2 {{ margin-top: 0; }}
+            .editorial-close {{ position: sticky; top: 10px; float: right; margin: 10px 10px -52px 0; z-index: 1; border: 0; border-radius: 50%; width: 42px; height: 42px; background: #13243b; color: white; font-size: 24px; cursor: pointer; }}
+            @media (max-width: 700px) {{ .editorial-grid {{ grid-template-columns: 1fr; }} .editorial-card img {{ height: 180px; }} }}
+        </style>
+        <section id="{scope}" class="editorial-grid">
+            {"".join(cards)}
+            <div class="editorial-modal" role="dialog" aria-modal="true">
+                <article class="editorial-modal-content">
+                    <button class="editorial-close" type="button" aria-label="Close">×</button>
+                    <img class="editorial-modal-image" alt="">
+                    <div class="editorial-modal-copy">
+                        <h2></h2>
+                        <p class="editorial-modal-summary"></p>
+                        <p class="editorial-modal-detail"></p>
+                    </div>
+                </article>
+            </div>
+        </section>
+        <script>
+            (() => {{
+                const root = document.getElementById("{scope}");
+                if (!root) return;
+                const modal = root.querySelector(".editorial-modal");
+                const close = () => modal.classList.remove("open");
+                root.querySelectorAll(".editorial-card").forEach((card) => {{
+                    card.addEventListener("dblclick", () => {{
+                        modal.querySelector("h2").textContent = card.dataset.title;
+                        modal.querySelector(".editorial-modal-summary").textContent = card.dataset.summary;
+                        modal.querySelector(".editorial-modal-detail").textContent = card.dataset.detail;
+                        const image = modal.querySelector(".editorial-modal-image");
+                        image.src = card.dataset.image;
+                        image.alt = card.dataset.title;
+                        modal.classList.add("open");
+                    }});
+                }});
+                modal.querySelector(".editorial-close").addEventListener("click", close);
+                modal.addEventListener("click", (event) => {{
+                    if (event.target === modal) close();
+                }});
+                root.addEventListener("keydown", (event) => {{
+                    if (event.key === "Escape") close();
+                }});
+            }})();
+        </script>
+        """,
+        unsafe_allow_javascript=True,
+    )
+
+
+editorial_data = {
+    1980: {
+        "scientists": (
+            "Voyager'ın Satürn araştırma ekibi",
+            "The Voyager Saturn Science Team",
+            "Voyager 1'in Satürn yakın geçişi, gezegen bilimcilerine halkaları ve uyduları yakından inceleme fırsatı verdi.",
+            "Voyager 1's Saturn flyby gave planetary scientists a close look at the planet's rings and moons.",
+            "12 Kasım 1980'de Voyager 1, Satürn'ün yakınından geçti. Görüntüleme ve ölçüm ekipleri gezegenin atmosferini, halkalarını ve uydularını inceledi. Bu gözlemler Satürn sisteminin beklenenden daha karmaşık olduğunu ortaya çıkardı.",
+            "On November 12, 1980, Voyager 1 flew past Saturn. Imaging and instrument teams studied the planet's atmosphere, rings, and moons. The observations revealed a more complex Saturn system than expected.",
+            "https://images.unsplash.com/photo-1614728894747-a83421e2b9c9?w=1200",
+        ),
+        "inventions": (
+            "Voyager: uzak dünyalara uzanan teknoloji",
+            "Voyager: Technology Reaching Distant Worlds",
+            "Derin uzay sondaları uzun mesafeli iletişim, otonom çalışma ve dayanıklı ölçüm sistemlerini bir araya getirdi.",
+            "Deep-space probes combined long-distance communication, autonomous operation, and resilient scientific instruments.",
+            "Voyager araçları, Güneş Sistemi'nin dış bölgelerinden veri göndermek için tasarlanmış antenler, bilimsel algılayıcılar ve uzun ömürlü güç sistemleri taşıyordu. Bu teknolojiler, uzay araçlarının Dünya'dan çok uzakta yıllarca çalışmasına imkân verdi.",
+            "The Voyager spacecraft carried antennas, scientific instruments, and long-lived power systems designed to return data from the outer solar system. These technologies let spacecraft operate for years at enormous distances from Earth.",
+            "https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=1200",
+        ),
+        "missions": (
+            "Voyager 1 ve Solar Maximum Mission",
+            "Voyager 1 and the Solar Maximum Mission",
+            "Satürn yakın geçişi ve Güneş'i inceleyen uydu, 1980'in öne çıkan uzay görevlerindendi.",
+            "A Saturn flyby and a satellite studying the Sun were among 1980's notable space missions.",
+            "Voyager 1, 12 Kasım'da Satürn'ün yanından geçerek atmosfer, halkalar ve uydular hakkında yakın gözlemler yaptı. NASA'nın Solar Maximum Mission uydusu ise Güneş etkinliğini ve patlamaları incelemek üzere 14 Şubat'ta fırlatıldı.",
+            "Voyager 1 made close observations of Saturn's atmosphere, rings, and moons on November 12. NASA's Solar Maximum Mission satellite launched on February 14 to study solar activity and flares.",
+            "https://images.unsplash.com/photo-1502134249126-9f3755a50d78?w=1200",
+        ),
+    },
+    1990: {
+        "scientists": (
+            "Hubble'ın arkasındaki astronomlar",
+            "The Astronomers Behind Hubble",
+            "Nancy Grace Roman'ın öncü uzay teleskobu çalışmaları, Hubble gibi görevlerin bilimsel temelinin oluşmasına yardım etti.",
+            "Nancy Grace Roman's pioneering work on space telescopes helped lay the scientific groundwork for missions such as Hubble.",
+            "NASA astronomu Nancy Grace Roman, uzay tabanlı astronominin öncülerindendi ve Hubble Uzay Teleskobu'nun planlanmasına katkıda bulundu. Hubble 1990'da yörüngeye ulaştığında, astronomlar atmosferin bulanıklaştırıcı etkisi olmadan evreni gözleyebildi.",
+            "NASA astronomer Nancy Grace Roman was a pioneer of space-based astronomy and helped plan the Hubble Space Telescope. When Hubble reached orbit in 1990, astronomers could observe the universe without atmospheric blurring.",
+            "https://images.unsplash.com/photo-1446776811953-b23d57bd21aa?w=1200",
+        ),
+        "inventions": (
+            "Hubble Uzay Teleskobu",
+            "The Hubble Space Telescope",
+            "Atmosferin dışına yerleştirilen teleskop, uzayın keskin görüntülerini Dünya'ya aktarmaya başladı.",
+            "A telescope above the atmosphere began sending sharp views of the universe back to Earth.",
+            "Hubble, 24 Nisan 1990'da Uzay Mekiği Discovery ile fırlatıldı. Yörüngede bakım yapılabilecek şekilde tasarlanması, optik sistemi düzeltildikten sonra gözlemlerini sürdürmesini sağladı. Görev, uzay teleskoplarının astronomideki önemini gösterdi.",
+            "Hubble launched aboard Space Shuttle Discovery on April 24, 1990. Its design allowed astronauts to service it in orbit, including correcting its optics so observations could continue. The mission demonstrated the importance of space telescopes to astronomy.",
+            "https://images.unsplash.com/photo-1504384308090-c894fdcc538d?w=1200",
+        ),
+        "missions": (
+            "Hubble ve Ulysses görevleri",
+            "The Hubble and Ulysses Missions",
+            "Hubble evreni gözlerken Ulysses, Güneş'in kutuplarını incelemek için yola çıktı.",
+            "While Hubble observed the universe, Ulysses set out to study the Sun's polar regions.",
+            "Hubble 24 Nisan 1990'da yörüngeye yerleştirildi. Ulysses ise 6 Ekim'de fırlatılarak Güneş'in kutuplarını ve güneş rüzgârını daha önce mümkün olmayan açılardan incelemeyi hedefledi.",
+            "Hubble entered orbit on April 24, 1990. Ulysses launched on October 6 to study the Sun's poles and solar wind from angles that had not previously been accessible.",
+            "https://images.unsplash.com/photo-1446776811953-b23d57bd21aa?w=1200",
+        ),
+    },
+    2000: {
+        "scientists": (
+            "Expedition 1: yörüngedeki ilk sürekli araştırma ekibi",
+            "Expedition 1: The First Continuous Research Crew in Orbit",
+            "William Shepherd, Yuri Gidzenko ve Sergei Krikalev, ISS'te sürekli insan varlığının başlangıcını yaptı.",
+            "William Shepherd, Yuri Gidzenko, and Sergei Krikalev began the era of continuous human presence aboard the ISS.",
+            "Expedition 1 ekibi 2 Kasım 2000'de Uluslararası Uzay İstasyonu'na ulaştı. Mürettebat, istasyonun sistemlerini devreye alırken uzun süreli uzay yaşamı ve araştırmaları için temel oluşturdu.",
+            "The Expedition 1 crew arrived at the International Space Station on November 2, 2000. They activated station systems and established a foundation for long-duration human spaceflight and research.",
+            "https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=1200",
+        ),
+        "inventions": (
+            "Uluslararası Uzay İstasyonu",
+            "The International Space Station",
+            "Yörüngedeki modüler laboratuvar, farklı ülkelerin araştırma ve mühendislik çalışmalarını bir araya getirdi.",
+            "The modular orbital laboratory brought together research and engineering from multiple countries.",
+            "ISS, farklı ülkelerin modüllerinin ve sistemlerinin yörüngede birleştirilmesiyle kuruldu. 2000'de ilk sürekli mürettebatın gelmesiyle mikro yerçekiminde uzun süreli araştırmalar başladı.",
+            "The ISS was assembled in orbit from modules and systems developed by different countries. With the arrival of its first permanent crew in 2000, long-term research in microgravity began.",
+            "https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=1200",
+        ),
+        "missions": (
+            "ISS'te kesintisiz insanlı yaşam başladı",
+            "Continuous Human Presence Begins Aboard the ISS",
+            "Expedition 1'in gelişi, uzay istasyonunda aralıksız görev dönemini başlattı.",
+            "The arrival of Expedition 1 began the continuous occupation of the space station.",
+            "2 Kasım 2000'de Expedition 1 mürettebatı ISS'e yerleşti. O tarihten beri istasyon, uluslararası ekiplerin dönüşümlü görev yaptığı bir yörünge laboratuvarı olarak kullanılıyor.",
+            "On November 2, 2000, the Expedition 1 crew moved aboard the ISS. Since then, the station has served as an orbital laboratory staffed by rotating international crews.",
+            "https://images.unsplash.com/photo-1517976487492-5750f3195933?w=1200",
+        ),
+    },
+    2010: {
+        "scientists": (
+            "Hayabusa örneklerini inceleyen bilim insanları",
+            "The Scientists Studying Hayabusa's Samples",
+            "Itokawa'dan getirilen küçük parçacıklar, asteroidlerin yapısını laboratuvarda inceleme olanağı sağladı.",
+            "Tiny particles returned from Itokawa gave researchers a chance to study an asteroid in the laboratory.",
+            "Japonya'nın Hayabusa aracı 13 Haziran 2010'da Itokawa asteroidinden topladığı parçacıkları Dünya'ya getirdi. Bilim ekipleri bu örnekleri analiz ederek asteroidlerin bileşimi ve Güneş Sistemi'nin erken dönemleri hakkında bilgi edindi.",
+            "Japan's Hayabusa spacecraft returned particles collected from asteroid Itokawa on June 13, 2010. Researchers analyzed the samples to learn about asteroid composition and the early solar system.",
+            "https://images.unsplash.com/photo-1502134249126-9f3755a50d78?w=1200",
+        ),
+        "inventions": (
+            "Dragon: özel sektörün yörünge aracı",
+            "Dragon: A Commercial Spacecraft Reaches Orbit",
+            "SpaceX'in Dragon kapsülü yörüngeye ulaşıp Dünya'ya dönen ilk özel şirket yapımı araç oldu.",
+            "SpaceX's Dragon became the first privately developed spacecraft to reach orbit and return to Earth.",
+            "Dragon, 8 Aralık 2010'da yörüngeye çıkıp güvenli şekilde Dünya'ya döndü. Yeniden kullanılabilir ve ticari uzay taşımacılığına yönelik araç tasarımı, uzaya erişimde yeni bir dönemin kapısını açtı.",
+            "Dragon reached orbit and safely returned to Earth on December 8, 2010. Its spacecraft design helped open a new era of commercial access to space and reusable transportation.",
+            "https://images.unsplash.com/photo-1517976487492-5750f3195933?w=1200",
+        ),
+        "missions": (
+            "Hayabusa ve Dragon'un önemli dönüşleri",
+            "Important Returns by Hayabusa and Dragon",
+            "2010'da bir araç asteroid örneği, bir diğeri yörünge uçuşu sonrası Dünya'ya döndü.",
+            "In 2010, one spacecraft returned an asteroid sample and another came home after an orbital flight.",
+            "Hayabusa, 13 Haziran'da Itokawa'dan aldığı örnekleri Dünya'ya ulaştırdı. SpaceX Dragon kapsülü ise 8 Aralık'ta yörüngeye çıkıp geri döndü; iki görev robotik keşif ve ticari uzay taşımacılığında önemli kilometre taşları oldu.",
+            "Hayabusa delivered samples from Itokawa on June 13. SpaceX's Dragon capsule reached orbit and returned on December 8; the missions marked milestones in robotic exploration and commercial spaceflight.",
+            "https://images.unsplash.com/photo-1502134249126-9f3755a50d78?w=1200",
+        ),
+    },
+    2020: {
+        "scientists": (
+            "Perseverance'ın Jezero Krateri bilim ekibi",
+            "Perseverance's Jezero Crater Science Team",
+            "Gezginin ekibi, eski göl ortamını ve Mars'ta geçmiş yaşam izlerini araştırmak üzere örnekler topluyor.",
+            "The rover team studies an ancient lake environment and collects samples while searching for signs of past life on Mars.",
+            "Perseverance 30 Temmuz 2020'de fırlatıldı ve 2021'de Jezero Krateri'ne indi. Bilim ekibi, kaya ve toprak örneklerini inceleyerek kraterin geçmişte su barındırıp barındırmadığını ve yaşam için elverişli olup olmadığını araştırıyor.",
+            "Perseverance launched on July 30, 2020, and landed in Jezero Crater in 2021. Its science team studies rock and soil samples to determine whether the crater once held water and could have supported life.",
+            "https://images.unsplash.com/photo-1506703719100-a0f3a48c0f86?w=1200",
+        ),
+        "inventions": (
+            "Ingenuity: başka bir gezegende motorlu uçuş",
+            "Ingenuity: Powered Flight on Another World",
+            "Mars helikopteri, başka bir gezegende motorlu ve kontrollü uçuşun mümkün olduğunu gösterdi.",
+            "The Mars helicopter demonstrated that powered, controlled flight is possible on another planet.",
+            "Ingenuity, Perseverance ile Mars'a taşındı ve Nisan 2021'de ilk motorlu kontrollü uçuşunu yaptı. İnce atmosfer ve düşük yerçekimi için geliştirilen hafif rotor sistemi, gelecekteki hava keşif araçlarına yol gösterdi.",
+            "Ingenuity travelled to Mars with Perseverance and made its first powered, controlled flight in April 2021. Its lightweight rotor system, designed for a thin atmosphere and low gravity, informed future aerial exploration concepts.",
+            "https://images.unsplash.com/photo-1506703719100-a0f3a48c0f86?w=1200",
+        ),
+        "missions": (
+            "Crew Dragon, OSIRIS-REx ve Perseverance",
+            "Crew Dragon, OSIRIS-REx, and Perseverance",
+            "İnsanlı yörünge uçuşu, asteroid örnekleme ve Mars keşfi 2020'nin öne çıkan görevleriydi.",
+            "Crewed orbital flight, asteroid sampling, and Mars exploration were major missions of 2020.",
+            "Demo-2, Crew Dragon ile astronotları 30 Mayıs 2020'de ISS'e taşıdı. OSIRIS-REx, Bennu'dan örnek topladı; Perseverance ise Mars'a doğru yola çıktı. Bu görevler insanlı uçuş, gezegen savunması bilimi ve robotik keşfin farklı alanlarını temsil etti.",
+            "Demo-2 carried astronauts to the ISS aboard Crew Dragon on May 30, 2020. OSIRIS-REx collected a sample from Bennu, and Perseverance began its journey to Mars. Together, the missions represented crewed flight, planetary science, and robotic exploration.",
+            "https://images.unsplash.com/photo-1517976487492-5750f3195933?w=1200",
+        ),
+    },
+    2026: {
+        "scientists": (
+            "Günümüzün uzay araştırma ekipleri",
+            "Today's Space Research Teams",
+            "Araştırmacılar Mars örnekleri, Ay görevleri ve yörünge güvenliği üzerine çalışmayı sürdürüyor.",
+            "Researchers continue work on Mars samples, lunar missions, and orbital safety.",
+            "2026 için bu alan, devam eden ve planlanan görevleri kapsayan bir başlangıç seçkisidir. Mars'tan örneklerin incelenmesi, Ay'da sürdürülebilir keşif ve yörünge enkazının izlenmesi bilim ekiplerinin önemli çalışma başlıkları arasında yer alıyor.",
+            "This is an introductory selection of ongoing and planned work for 2026. Studying Mars samples, sustainable lunar exploration, and tracking orbital debris are among the important areas for research teams.",
+            "https://images.unsplash.com/photo-1446776811953-b23d57bd21aa?w=1200",
+        ),
+        "inventions": (
+            "Yeni nesil keşif teknolojileri",
+            "Next-Generation Exploration Technology",
+            "Robotik iniş sistemleri, uydu ağları ve örnek toplama araçları gelecekteki keşifleri mümkün kılıyor.",
+            "Robotic landing systems, satellite networks, and sample-collection tools enable future exploration.",
+            "Bu 2026 seçkisi güncel ve planlanan teknolojilere odaklanır; planları tamamlanmış görevler gibi sunmaz. Hassas iniş, uzun süreli yaşam destek sistemleri ve uzay araçlarının güvenli biçimde bertaraf edilmesi geliştirilmekte olan önemli çözümlerdir.",
+            "This 2026 selection focuses on current and planned technologies without presenting plans as completed missions. Precision landing, long-duration life support, and safe spacecraft disposal are important areas of development.",
+            "https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=1200",
+        ),
+        "missions": (
+            "2026 uzay gündemi: Ay ve yörünge güvenliği",
+            "2026 Space Agenda: The Moon and Orbital Safety",
+            "Ay'a sürdürülebilir erişim ve yörünge enkazının takibi güncel uzay çalışmalarının odağında.",
+            "Sustainable lunar access and orbital-debris tracking are central themes in current space activity.",
+            "Bu kart güncel gündemi özetler; 2026'da tamamlanmış belirli bir fırlatma veya keşif iddiasında bulunmaz. İnsanlı ve robotik Ay görevleri için güvenli iniş, kaynakların sorumlu kullanımı ve uyduların çarpışma risklerini azaltma önemli hedeflerdir.",
+            "This card summarizes current priorities and does not claim a specific 2026 launch or discovery has already occurred. Safe landings, responsible use of resources, and reducing satellite-collision risks are important goals for crewed and robotic lunar missions.",
+            "https://images.unsplash.com/photo-1614728894747-a83421e2b9c9?w=1200",
+        ),
+    },
+}
+
+space_articles = {
+    "black_holes": (
+        "Karadelikler: ışığın bile kaçamadığı bölgeler",
+        "Black Holes: Where Even Light Cannot Escape",
+        "Karadelik, madde ve enerjinin çok küçük bir hacimde yoğunlaşmasıyla oluşan; olay ufkunun içinden ışığın bile kaçamadığı bir uzay-zaman bölgesidir.",
+        "A black hole is a region of spacetime where matter and energy are compressed so densely that not even light can escape from within its event horizon.",
+        "Karadelikler doğrudan ışık yaymadıkları için çevrelerindeki madde ve yıldızlara etkileriyle incelenir. Olay ufku, geri dönüşün mümkün olmadığı sınırı tanımlar; çevresindeki sıcak gaz ise güçlü ışınım üretebilir. Kütlelerine göre yıldız kütleli ve süper kütleli sınıflar başta olmak üzere farklı türleri vardır.",
+        "Black holes are studied through their effects on nearby matter and stars because they do not emit light directly. The event horizon marks the boundary beyond which escape is impossible, while hot gas around a black hole can emit intense radiation. They occur in different mass ranges, including stellar-mass and supermassive black holes.",
+        "https://images.unsplash.com/photo-1502134249126-9f3755a50d78?w=1200",
+    ),
+    "stars": (
+        "Yıldızlar: gaz bulutlarından kozmik fırınlara",
+        "Stars: From Clouds of Gas to Cosmic Furnaces",
+        "Yıldızlar, kütleçekiminin gaz ve tozu bir araya topladığı; çekirdeklerinde nükleer füzyonla enerji üreten sıcak plazma küreleridir.",
+        "Stars are hot spheres of plasma formed as gravity gathers gas and dust, producing energy through nuclear fusion in their cores.",
+        "Yıldızlar doğum bulutlarında oluşur ve kütlelerine bağlı yaşam döngülerinden geçer. Güneş benzeri yıldızlar ömürlerinin sonunda beyaz cüceye dönüşebilir; çok daha büyük kütleli yıldızlar süpernova patlamasıyla sonlanıp nötron yıldızı ya da karadelik bırakabilir. Renk ve parlaklıkları sıcaklıkları ve evrim aşamaları hakkında ipucu verir.",
+        "Stars form in stellar nurseries and follow life cycles that depend on their mass. Sun-like stars can end as white dwarfs, while much more massive stars may explode as supernovae and leave neutron stars or black holes. A star's color and brightness provide clues to its temperature and evolutionary stage.",
+        "https://images.unsplash.com/photo-1446776811953-b23d57bd21aa?w=1200",
+    ),
+}
+
 english_data = {
     1980: {
         "baslik": "1980: Voyager Flybys and the Discovery of Ozone Depletion",
@@ -714,11 +1017,23 @@ if english:
         )
     ]
 
-tab1, tab2, tab3, tab4 = st.tabs(
+tab1, tab2, tab3, tab4, tab5 = st.tabs(
     (
-        ["🪐 3D System", "🗑️ Space Debris", "📰 News", "💻 Developer"]
+        [
+            "🪐 3D System",
+            "🗑️ Space Debris",
+            "📰 News",
+            "🌌 About Space",
+            "💻 Developer",
+        ]
         if english
-        else ["🪐 3D Sistem", "🗑️ Uzay Çöpleri", "📰 Gazete", "💻 Developer"]
+        else [
+            "🪐 3D Sistem",
+            "🗑️ Uzay Çöpleri",
+            "📰 Gazete",
+            "🌌 Uzay Hakkında",
+            "💻 Developer",
+        ]
     )
 )
 
@@ -1007,6 +1322,16 @@ with tab2:
         """,
         height=570,
     )
+    debris_articles = get_articles("debris", secilen_yil)
+    if debris_articles:
+        st.markdown(
+            "### 📚 ESA / NASA research"
+            if english
+            else "### 📚 ESA / NASA araştırma yazıları"
+        )
+        render_editorial_cards(debris_articles, f"debris-research-{secilen_yil}")
+    else:
+        render_no_year_finding()
 
 with tab3:
     st.markdown(
@@ -1019,22 +1344,101 @@ with tab3:
         if english
         else "Seçilen yılın uzay gelişmelerinden haberler"
     )
+    st.caption(
+        "Mission cards preserve the event's exact date; the selected year groups related archive content."
+        if english
+        else "Görev kartları olayın kesin tarihini korur; seçilen yıl ilgili arşiv içeriklerini gruplar."
+    )
+    gazete_tabs = st.tabs(
+        (
+            [
+                "🗞️ Front Page",
+                "🔬 Scientists",
+                "🛠️ Inventions",
+                "🧑‍🚀 Astronauts & Satellites",
+            ]
+            if english
+            else [
+                "🗞️ İlk Sayfa",
+                "🔬 Bilim İnsanları",
+                "🛠️ İcatlar",
+                "🧑‍🚀 Astronotlar ve Uydular",
+            ]
+        )
+    )
 
-    for haber in haber_listesi:
-        with st.container(border=True):
-            resim_kolonu, yazi_kolonu = st.columns([0.9, 1.7], vertical_alignment="center")
-            with resim_kolonu:
-                st.image(haber["gorsel"], width="stretch")
-            with yazi_kolonu:
-                st.caption(
-                    f"SPACE NEWS  •  {haber['tarih']}"
-                    if english
-                    else f"UZAY HABERLERİ  •  {haber['tarih']}"
-                )
-                st.markdown(f"#### {haber['baslik']}")
-                st.write(haber["metin"])
+    with gazete_tabs[0]:
+        front_page_articles = [
+            (
+                story["baslik"],
+                story["baslik"],
+                f"{story['tarih']} · {story['metin'][:240]}",
+                f"{story['tarih']} · {story['metin'][:240]}",
+                story["metin"],
+                story["metin"],
+                story["gorsel"],
+            )
+            for story in haber_listesi
+        ]
+        render_editorial_cards(front_page_articles, f"front-page-{secilen_yil}")
+
+    with gazete_tabs[1]:
+        scientist_articles = get_articles("scientists", secilen_yil)
+        if scientist_articles:
+            render_editorial_cards(
+                scientist_articles,
+                f"scientists-{secilen_yil}",
+            )
+        else:
+            render_no_year_finding()
+
+    with gazete_tabs[2]:
+        invention_articles = get_articles("inventions", secilen_yil)
+        if invention_articles:
+            render_editorial_cards(
+                invention_articles,
+                f"inventions-{secilen_yil}",
+            )
+        else:
+            render_no_year_finding()
+
+    with gazete_tabs[3]:
+        mission_articles = get_articles("missions", secilen_yil)
+        if mission_articles:
+            render_editorial_cards(
+                mission_articles,
+                f"missions-{secilen_yil}",
+            )
+        else:
+            render_no_year_finding()
 
 with tab4:
+    st.markdown(
+        "### 🌌 About Space" if english else "### 🌌 Uzay Hakkında"
+    )
+    st.caption(
+        "Explore black holes and stars. Double-click an article to open its detailed view."
+        if english
+        else "Karadelikler ve yıldızları keşfet. Ayrıntılı görünüm için bir yazıya çift tıkla."
+    )
+    space_tabs = st.tabs(
+        ["🕳️ Black Holes", "⭐ Stars"]
+        if english
+        else ["🕳️ Karadelikler", "⭐ Yıldızlar"]
+    )
+    with space_tabs[0]:
+        black_hole_articles = get_articles("black_holes", secilen_yil)
+        render_editorial_cards(
+            black_hole_articles,
+            "black-holes",
+        )
+    with space_tabs[1]:
+        render_editorial_cards(
+            get_articles("stars", secilen_yil),
+            "stars",
+        )
+
+with tab5:
     st.markdown(
         f"""
         <section style="
@@ -1132,6 +1536,7 @@ with tab4:
                 <li><a href="https://science.nasa.gov" target="_blank" rel="noopener noreferrer" style="color:#a5f3fc;">NASA Science — Official Website</a></li>
                 <li><a href="https://tua.gov.tr" target="_blank" rel="noopener noreferrer" style="color:#a5f3fc;">{'Turkish Space Agency — Official Website' if english else 'Türkiye Uzay Ajansı — Resmî Web Sitesi'}</a></li>
                 <li><a href="https://bilimgenc.tubitak.gov.tr" target="_blank" rel="noopener noreferrer" style="color:#a5f3fc;">{'TÜBİTAK Bilim Genç — Official Website' if english else 'TÜBİTAK Bilim Genç — Resmî Web Sitesi'}</a></li>
+                {"".join(f'<li><a href="{source[2]}" target="_blank" rel="noopener noreferrer" style="color:#a5f3fc;">{escape(source[0] if english else source[1])}</a></li>' for source in get_all_sources())}
             </ul>
         </section>
         """,
