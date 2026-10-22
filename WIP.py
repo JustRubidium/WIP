@@ -1438,6 +1438,22 @@ with tab4:
             "stars",
         )
 
+UNSPLASH_IMAGE_SOURCES = (
+    "https://images.unsplash.com/photo-1419242902214-272b3f66ee7a",
+    "https://images.unsplash.com/photo-1446776811953-b23d57bd21aa",
+    "https://images.unsplash.com/photo-1451187580459-43490279c0fa",
+    "https://images.unsplash.com/photo-1462331940025-496dfbfc7564",
+    "https://images.unsplash.com/photo-1484589065579-248aad0d8b13",
+    "https://images.unsplash.com/photo-1502134249126-9f3755a50d78",
+    "https://images.unsplash.com/photo-1504384308090-c894fdcc538d",
+    "https://images.unsplash.com/photo-1506703719100-a0f3a48c0f86",
+    "https://images.unsplash.com/photo-1517976487492-5750f3195933",
+    "https://images.unsplash.com/photo-1519681393784-d120267933ba",
+    "https://images.unsplash.com/photo-1532693322450-2cb5c511067d",
+    "https://images.unsplash.com/photo-1534796636912-3b95b3ab5986",
+    "https://images.unsplash.com/photo-1614728894747-a83421e2b9c9",
+)
+
 with tab5:
     st.toggle(
         "🐈 Mouse-following cat"
@@ -1547,6 +1563,8 @@ with tab5:
                 <li><a href="https://science.nasa.gov" target="_blank" rel="noopener noreferrer" style="color:#a5f3fc;">NASA Science — Official Website</a></li>
                 <li><a href="https://tua.gov.tr" target="_blank" rel="noopener noreferrer" style="color:#a5f3fc;">{'Turkish Space Agency — Official Website' if english else 'Türkiye Uzay Ajansı — Resmî Web Sitesi'}</a></li>
                 <li><a href="https://bilimgenc.tubitak.gov.tr" target="_blank" rel="noopener noreferrer" style="color:#a5f3fc;">{'TÜBİTAK Bilim Genç — Official Website' if english else 'TÜBİTAK Bilim Genç — Resmî Web Sitesi'}</a></li>
+                <li><a href="https://unsplash.com/license" target="_blank" rel="noopener noreferrer" style="color:#a5f3fc;">Unsplash — {'License and image-use terms' if english else 'Lisans ve görsel kullanım koşulları'}</a></li>
+                {"".join(f'<li><a href="{image_url}" target="_blank" rel="noopener noreferrer" style="color:#a5f3fc;">Unsplash — {"Image used in this project" if english else "Projede kullanılan görsel"} ({image_url.rsplit("/", 1)[-1]})</a></li>' for image_url in UNSPLASH_IMAGE_SOURCES)}
                 {"".join(f'<li><a href="{source[2]}" target="_blank" rel="noopener noreferrer" style="color:#a5f3fc;">{escape(source[0] if english else source[1])}</a></li>' for source in get_all_sources())}
             </ul>
         </section>
